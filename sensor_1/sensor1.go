@@ -50,7 +50,7 @@ func main() {
 	grpcServer := grpc.NewServer()
 
 	// Dial EdgeService
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	conn, err := grpc.Dial("localhost:50052", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("Failed to connect to EdgeService: %v", err)
 	}
@@ -63,14 +63,14 @@ func main() {
 
 	go sendDataToEdgeService(edgeClient)
 
-	listener, err := net.Listen("tcp", ":50052")
+	listener, err := net.Listen("tcp", ":50053")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
 	reflection.Register(grpcServer)
 
-	log.Printf("Starting gRPC server on port 50052")
+	log.Printf("Starting gRPC server on port 50053")
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
 	}

@@ -15,7 +15,8 @@ import proto.fog_pb2_grpc as fog_pb2_grpc  # noqa
 class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def ProcessData(self, request, context):
         # Implement your logic here
-        response_data = fog_pb2.CloudData(result=42)  # Example result
+        response_data = fog_pb2.CloudData(result=42)  # Example result\
+        print(f"Received data: {request.data}")
         return fog_pb2.CloudResponse(data=response_data)
 
 
