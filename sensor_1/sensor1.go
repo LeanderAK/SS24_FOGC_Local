@@ -68,6 +68,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
+	// Enable reflection (for grpcui and grpcurl)
 	reflection.Register(grpcServer)
 
 	log.Printf("Starting gRPC server on port 50053")

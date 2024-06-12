@@ -24,11 +24,12 @@ def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     fog_pb2_grpc.add_CloudServiceServicer_to_server(CloudService(), server)
 
-    # Enable reflection (for grpcui and grpcurl)
     SERVICE_NAMES = (
         fog_pb2.DESCRIPTOR.services_by_name["CloudService"].full_name,
         reflection.SERVICE_NAME,
     )
+
+    # Enable reflection (for grpcui and grpcurl)
     reflection.enable_server_reflection(SERVICE_NAMES, server)
 
     server.add_insecure_port("[::]:50051")
