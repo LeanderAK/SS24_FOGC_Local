@@ -15,9 +15,10 @@ type EdgeServer struct {
 }
 
 func (s *EdgeServer) ProcessData(ctx context.Context, req *pb.EdgeRequest) (*pb.EdgeResponse, error) {
-	log.Printf("Processing data: %d", req.Data.Id)
+	log.Printf("Processing data: %+v", req)
 	return &pb.EdgeResponse{}, nil
 }
+
 
 func main() {
 	grpcServer := grpc.NewServer()
