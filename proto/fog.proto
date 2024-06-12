@@ -1,0 +1,51 @@
+syntax = "proto3";
+
+package fogpb;
+option go_package = "./;fogpb";
+
+
+message SensorData {
+    int32 id = 1;
+    string type = 2;
+    string value = 3;
+    string timestamp = 4;
+}
+
+message SensorRequest {
+    int32 id = 1;
+}
+
+message SensorResponse {
+    SensorData data = 1;
+}
+
+message EdgeRequest {
+    SensorData data = 1;
+}
+
+message EdgeResponse { }
+
+message CloudRequest {
+    SensorData data = 1;
+}
+
+message CloudData {
+    // TODO
+    int32 result = 1;
+}
+
+message CloudResponse {
+    CloudData data = 1;
+}
+
+service SensorService {
+    rpc GetData(SensorRequest) returns (SensorResponse);
+}
+
+service EdgeService {
+    rpc ProcessData(EdgeRequest) returns (EdgeResponse);
+}
+
+service CloudService {
+    rpc ProcessData(CloudRequest) returns (CloudResponse);
+}
