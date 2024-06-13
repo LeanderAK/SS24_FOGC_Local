@@ -19,47 +19,36 @@ class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type:
 
 class SensorServiceStub:
     def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
-    GetData: grpc.UnaryUnaryMultiCallable[
+    StreamData: grpc.UnaryStreamMultiCallable[
         fog_pb2.SensorRequest,
         fog_pb2.SensorResponse,
     ]
 
 class SensorServiceAsyncStub:
-    GetData: grpc.aio.UnaryUnaryMultiCallable[
+    StreamData: grpc.aio.UnaryStreamMultiCallable[
         fog_pb2.SensorRequest,
         fog_pb2.SensorResponse,
     ]
 
 class SensorServiceServicer(metaclass=abc.ABCMeta):
     @abc.abstractmethod
-    def GetData(
+    def StreamData(
         self,
         request: fog_pb2.SensorRequest,
         context: _ServicerContext,
-    ) -> typing.Union[fog_pb2.SensorResponse, collections.abc.Awaitable[fog_pb2.SensorResponse]]: ...
+    ) -> typing.Union[collections.abc.Iterator[fog_pb2.SensorResponse], collections.abc.AsyncIterator[fog_pb2.SensorResponse]]: ...
 
 def add_SensorServiceServicer_to_server(servicer: SensorServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...
 
 class EdgeServiceStub:
     def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
-    ProcessData: grpc.UnaryUnaryMultiCallable[
-        fog_pb2.EdgeRequest,
-        fog_pb2.EdgeResponse,
-    ]
+    ...
 
 class EdgeServiceAsyncStub:
-    ProcessData: grpc.aio.UnaryUnaryMultiCallable[
-        fog_pb2.EdgeRequest,
-        fog_pb2.EdgeResponse,
-    ]
+    ...
 
 class EdgeServiceServicer(metaclass=abc.ABCMeta):
-    @abc.abstractmethod
-    def ProcessData(
-        self,
-        request: fog_pb2.EdgeRequest,
-        context: _ServicerContext,
-    ) -> typing.Union[fog_pb2.EdgeResponse, collections.abc.Awaitable[fog_pb2.EdgeResponse]]: ...
+    ...
 
 def add_EdgeServiceServicer_to_server(servicer: EdgeServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...
 

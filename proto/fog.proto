@@ -39,11 +39,10 @@ message CloudResponse {
 }
 
 service SensorService {
-    rpc GetData(SensorRequest) returns (SensorResponse);
+    rpc StreamData(SensorRequest) returns (stream SensorResponse);
 }
 
 service EdgeService {
-    rpc ProcessData(EdgeRequest) returns (EdgeResponse);
 }
 
 service CloudService {

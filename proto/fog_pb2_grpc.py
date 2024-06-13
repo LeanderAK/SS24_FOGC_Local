@@ -39,8 +39,8 @@ class SensorServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.GetData = channel.unary_unary(
-                '/fogpb.SensorService/GetData',
+        self.StreamData = channel.unary_stream(
+                '/fogpb.SensorService/StreamData',
                 request_serializer=fog__pb2.SensorRequest.SerializeToString,
                 response_deserializer=fog__pb2.SensorResponse.FromString,
                 _registered_method=True)
@@ -49,7 +49,7 @@ class SensorServiceStub(object):
 class SensorServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def GetData(self, request, context):
+    def StreamData(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -58,8 +58,8 @@ class SensorServiceServicer(object):
 
 def add_SensorServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'GetData': grpc.unary_unary_rpc_method_handler(
-                    servicer.GetData,
+            'StreamData': grpc.unary_stream_rpc_method_handler(
+                    servicer.StreamData,
                     request_deserializer=fog__pb2.SensorRequest.FromString,
                     response_serializer=fog__pb2.SensorResponse.SerializeToString,
             ),
@@ -75,7 +75,7 @@ class SensorService(object):
     """Missing associated documentation comment in .proto file."""
 
     @staticmethod
-    def GetData(request,
+    def StreamData(request,
             target,
             options=(),
             channel_credentials=None,
@@ -85,10 +85,10 @@ class SensorService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
+        return grpc.experimental.unary_stream(
             request,
             target,
-            '/fogpb.SensorService/GetData',
+            '/fogpb.SensorService/StreamData',
             fog__pb2.SensorRequest.SerializeToString,
             fog__pb2.SensorResponse.FromString,
             options,
@@ -111,30 +111,14 @@ class EdgeServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.ProcessData = channel.unary_unary(
-                '/fogpb.EdgeService/ProcessData',
-                request_serializer=fog__pb2.EdgeRequest.SerializeToString,
-                response_deserializer=fog__pb2.EdgeResponse.FromString,
-                _registered_method=True)
 
 
 class EdgeServiceServicer(object):
     """Missing associated documentation comment in .proto file."""
 
-    def ProcessData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
-
 
 def add_EdgeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ProcessData': grpc.unary_unary_rpc_method_handler(
-                    servicer.ProcessData,
-                    request_deserializer=fog__pb2.EdgeRequest.FromString,
-                    response_serializer=fog__pb2.EdgeResponse.SerializeToString,
-            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'fogpb.EdgeService', rpc_method_handlers)
@@ -145,33 +129,6 @@ def add_EdgeServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class EdgeService(object):
     """Missing associated documentation comment in .proto file."""
-
-    @staticmethod
-    def ProcessData(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/fogpb.EdgeService/ProcessData',
-            fog__pb2.EdgeRequest.SerializeToString,
-            fog__pb2.EdgeResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
 
 
 class CloudServiceStub(object):
