@@ -18,59 +18,154 @@ class _ServicerContext(grpc.ServicerContext, grpc.aio.ServicerContext):  # type:
     ...
 
 class SensorServiceStub:
+    """SensorService runs on the edge device and
+    streams sensor data to the EdgeService.
+    """
+
     def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     StreamData: grpc.UnaryStreamMultiCallable[
-        fog_pb2.SensorRequest,
-        fog_pb2.SensorResponse,
+        fog_pb2.StreamDataRequest,
+        fog_pb2.StreamDataResponse,
     ]
+    """StreamData will be called by the EdgeService
+    to initiate a stream of sensor data.
+    """
 
 class SensorServiceAsyncStub:
+    """SensorService runs on the edge device and
+    streams sensor data to the EdgeService.
+    """
+
     StreamData: grpc.aio.UnaryStreamMultiCallable[
-        fog_pb2.SensorRequest,
-        fog_pb2.SensorResponse,
+        fog_pb2.StreamDataRequest,
+        fog_pb2.StreamDataResponse,
     ]
+    """StreamData will be called by the EdgeService
+    to initiate a stream of sensor data.
+    """
 
 class SensorServiceServicer(metaclass=abc.ABCMeta):
+    """SensorService runs on the edge device and
+    streams sensor data to the EdgeService.
+    """
+
     @abc.abstractmethod
     def StreamData(
         self,
-        request: fog_pb2.SensorRequest,
+        request: fog_pb2.StreamDataRequest,
         context: _ServicerContext,
-    ) -> typing.Union[collections.abc.Iterator[fog_pb2.SensorResponse], collections.abc.AsyncIterator[fog_pb2.SensorResponse]]: ...
+    ) -> typing.Union[collections.abc.Iterator[fog_pb2.StreamDataResponse], collections.abc.AsyncIterator[fog_pb2.StreamDataResponse]]:
+        """StreamData will be called by the EdgeService
+        to initiate a stream of sensor data.
+        """
 
 def add_SensorServiceServicer_to_server(servicer: SensorServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...
 
 class EdgeServiceStub:
+    """EdgeService runs on the edge device and
+    receives sensor data from the SensorService.
+    It also sends aggregated sensor data to the CloudService.
+    """
+
     def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
-    ...
+    UpdatePosition: grpc.UnaryUnaryMultiCallable[
+        fog_pb2.UpdatePositionRequest,
+        fog_pb2.UpdatePositionResponse,
+    ]
+    """UpdatePosition will be called by the SensorService
+    to update the position of the edge device.
+    This endpoint returns nothing,
+    no error means position was updated successfully.
+    """
 
 class EdgeServiceAsyncStub:
-    ...
+    """EdgeService runs on the edge device and
+    receives sensor data from the SensorService.
+    It also sends aggregated sensor data to the CloudService.
+    """
+
+    UpdatePosition: grpc.aio.UnaryUnaryMultiCallable[
+        fog_pb2.UpdatePositionRequest,
+        fog_pb2.UpdatePositionResponse,
+    ]
+    """UpdatePosition will be called by the SensorService
+    to update the position of the edge device.
+    This endpoint returns nothing,
+    no error means position was updated successfully.
+    """
 
 class EdgeServiceServicer(metaclass=abc.ABCMeta):
-    ...
+    """EdgeService runs on the edge device and
+    receives sensor data from the SensorService.
+    It also sends aggregated sensor data to the CloudService.
+    """
+
+    @abc.abstractmethod
+    def UpdatePosition(
+        self,
+        request: fog_pb2.UpdatePositionRequest,
+        context: _ServicerContext,
+    ) -> typing.Union[fog_pb2.UpdatePositionResponse, collections.abc.Awaitable[fog_pb2.UpdatePositionResponse]]:
+        """UpdatePosition will be called by the SensorService
+        to update the position of the edge device.
+        This endpoint returns nothing,
+        no error means position was updated successfully.
+        """
 
 def add_EdgeServiceServicer_to_server(servicer: EdgeServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...
 
 class CloudServiceStub:
+    """CloudService runs on the cloud and processes
+    aggregated sensor data.
+    """
+
     def __init__(self, channel: typing.Union[grpc.Channel, grpc.aio.Channel]) -> None: ...
     ProcessData: grpc.UnaryUnaryMultiCallable[
-        fog_pb2.CloudRequest,
-        fog_pb2.CloudResponse,
+        fog_pb2.ProcessDataRequest,
+        fog_pb2.ProcessDataResponse,
     ]
+    """ProcessData will be called by the EdgeService
+    to process aggregated sensor data.
+    This endpoint returns nothing,
+    no error means data was received successfully.
+    Results will be returned to the UpdatePosition endpoint
+    in the EdgeService.
+    """
 
 class CloudServiceAsyncStub:
+    """CloudService runs on the cloud and processes
+    aggregated sensor data.
+    """
+
     ProcessData: grpc.aio.UnaryUnaryMultiCallable[
-        fog_pb2.CloudRequest,
-        fog_pb2.CloudResponse,
+        fog_pb2.ProcessDataRequest,
+        fog_pb2.ProcessDataResponse,
     ]
+    """ProcessData will be called by the EdgeService
+    to process aggregated sensor data.
+    This endpoint returns nothing,
+    no error means data was received successfully.
+    Results will be returned to the UpdatePosition endpoint
+    in the EdgeService.
+    """
 
 class CloudServiceServicer(metaclass=abc.ABCMeta):
+    """CloudService runs on the cloud and processes
+    aggregated sensor data.
+    """
+
     @abc.abstractmethod
     def ProcessData(
         self,
-        request: fog_pb2.CloudRequest,
+        request: fog_pb2.ProcessDataRequest,
         context: _ServicerContext,
-    ) -> typing.Union[fog_pb2.CloudResponse, collections.abc.Awaitable[fog_pb2.CloudResponse]]: ...
+    ) -> typing.Union[fog_pb2.ProcessDataResponse, collections.abc.Awaitable[fog_pb2.ProcessDataResponse]]:
+        """ProcessData will be called by the EdgeService
+        to process aggregated sensor data.
+        This endpoint returns nothing,
+        no error means data was received successfully.
+        Results will be returned to the UpdatePosition endpoint
+        in the EdgeService.
+        """
 
 def add_CloudServiceServicer_to_server(servicer: CloudServiceServicer, server: typing.Union[grpc.Server, grpc.aio.Server]) -> None: ...

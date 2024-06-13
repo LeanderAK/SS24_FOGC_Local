@@ -31,7 +31,9 @@ if _version_not_supported:
 
 
 class SensorServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """SensorService runs on the edge device and
+    streams sensor data to the EdgeService.
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -41,16 +43,20 @@ class SensorServiceStub(object):
         """
         self.StreamData = channel.unary_stream(
                 '/fogpb.SensorService/StreamData',
-                request_serializer=fog__pb2.SensorRequest.SerializeToString,
-                response_deserializer=fog__pb2.SensorResponse.FromString,
+                request_serializer=fog__pb2.StreamDataRequest.SerializeToString,
+                response_deserializer=fog__pb2.StreamDataResponse.FromString,
                 _registered_method=True)
 
 
 class SensorServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """SensorService runs on the edge device and
+    streams sensor data to the EdgeService.
+    """
 
     def StreamData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """StreamData will be called by the EdgeService
+        to initiate a stream of sensor data.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -60,8 +66,8 @@ def add_SensorServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'StreamData': grpc.unary_stream_rpc_method_handler(
                     servicer.StreamData,
-                    request_deserializer=fog__pb2.SensorRequest.FromString,
-                    response_serializer=fog__pb2.SensorResponse.SerializeToString,
+                    request_deserializer=fog__pb2.StreamDataRequest.FromString,
+                    response_serializer=fog__pb2.StreamDataResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -72,7 +78,9 @@ def add_SensorServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class SensorService(object):
-    """Missing associated documentation comment in .proto file."""
+    """SensorService runs on the edge device and
+    streams sensor data to the EdgeService.
+    """
 
     @staticmethod
     def StreamData(request,
@@ -89,8 +97,8 @@ class SensorService(object):
             request,
             target,
             '/fogpb.SensorService/StreamData',
-            fog__pb2.SensorRequest.SerializeToString,
-            fog__pb2.SensorResponse.FromString,
+            fog__pb2.StreamDataRequest.SerializeToString,
+            fog__pb2.StreamDataResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -103,7 +111,10 @@ class SensorService(object):
 
 
 class EdgeServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """EdgeService runs on the edge device and
+    receives sensor data from the SensorService.
+    It also sends aggregated sensor data to the CloudService.
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -111,14 +122,37 @@ class EdgeServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
+        self.UpdatePosition = channel.unary_unary(
+                '/fogpb.EdgeService/UpdatePosition',
+                request_serializer=fog__pb2.UpdatePositionRequest.SerializeToString,
+                response_deserializer=fog__pb2.UpdatePositionResponse.FromString,
+                _registered_method=True)
 
 
 class EdgeServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """EdgeService runs on the edge device and
+    receives sensor data from the SensorService.
+    It also sends aggregated sensor data to the CloudService.
+    """
+
+    def UpdatePosition(self, request, context):
+        """UpdatePosition will be called by the SensorService
+        to update the position of the edge device.
+        This endpoint returns nothing,
+        no error means position was updated successfully.
+        """
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
 
 
 def add_EdgeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
+            'UpdatePosition': grpc.unary_unary_rpc_method_handler(
+                    servicer.UpdatePosition,
+                    request_deserializer=fog__pb2.UpdatePositionRequest.FromString,
+                    response_serializer=fog__pb2.UpdatePositionResponse.SerializeToString,
+            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'fogpb.EdgeService', rpc_method_handlers)
@@ -128,11 +162,43 @@ def add_EdgeServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class EdgeService(object):
-    """Missing associated documentation comment in .proto file."""
+    """EdgeService runs on the edge device and
+    receives sensor data from the SensorService.
+    It also sends aggregated sensor data to the CloudService.
+    """
+
+    @staticmethod
+    def UpdatePosition(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/fogpb.EdgeService/UpdatePosition',
+            fog__pb2.UpdatePositionRequest.SerializeToString,
+            fog__pb2.UpdatePositionResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
 
 
 class CloudServiceStub(object):
-    """Missing associated documentation comment in .proto file."""
+    """CloudService runs on the cloud and processes
+    aggregated sensor data.
+    """
 
     def __init__(self, channel):
         """Constructor.
@@ -142,16 +208,24 @@ class CloudServiceStub(object):
         """
         self.ProcessData = channel.unary_unary(
                 '/fogpb.CloudService/ProcessData',
-                request_serializer=fog__pb2.CloudRequest.SerializeToString,
-                response_deserializer=fog__pb2.CloudResponse.FromString,
+                request_serializer=fog__pb2.ProcessDataRequest.SerializeToString,
+                response_deserializer=fog__pb2.ProcessDataResponse.FromString,
                 _registered_method=True)
 
 
 class CloudServiceServicer(object):
-    """Missing associated documentation comment in .proto file."""
+    """CloudService runs on the cloud and processes
+    aggregated sensor data.
+    """
 
     def ProcessData(self, request, context):
-        """Missing associated documentation comment in .proto file."""
+        """ProcessData will be called by the EdgeService
+        to process aggregated sensor data.
+        This endpoint returns nothing,
+        no error means data was received successfully.
+        Results will be returned to the UpdatePosition endpoint
+        in the EdgeService.
+        """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
@@ -161,8 +235,8 @@ def add_CloudServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'ProcessData': grpc.unary_unary_rpc_method_handler(
                     servicer.ProcessData,
-                    request_deserializer=fog__pb2.CloudRequest.FromString,
-                    response_serializer=fog__pb2.CloudResponse.SerializeToString,
+                    request_deserializer=fog__pb2.ProcessDataRequest.FromString,
+                    response_serializer=fog__pb2.ProcessDataResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -173,7 +247,9 @@ def add_CloudServiceServicer_to_server(servicer, server):
 
  # This class is part of an EXPERIMENTAL API.
 class CloudService(object):
-    """Missing associated documentation comment in .proto file."""
+    """CloudService runs on the cloud and processes
+    aggregated sensor data.
+    """
 
     @staticmethod
     def ProcessData(request,
@@ -190,8 +266,8 @@ class CloudService(object):
             request,
             target,
             '/fogpb.CloudService/ProcessData',
-            fog__pb2.CloudRequest.SerializeToString,
-            fog__pb2.CloudResponse.FromString,
+            fog__pb2.ProcessDataRequest.SerializeToString,
+            fog__pb2.ProcessDataResponse.FromString,
             options,
             channel_credentials,
             insecure,

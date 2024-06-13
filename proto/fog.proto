@@ -11,40 +11,64 @@ message SensorData {
     string timestamp = 4;
 }
 
-message SensorRequest {
+message StreamDataRequest {
     int32 id = 1;
 }
 
-message SensorResponse {
+message StreamDataResponse {
     SensorData data = 1;
 }
 
-message EdgeRequest {
-    SensorData data = 1;
-}
-
-message EdgeResponse { }
-
-message CloudRequest {
-    SensorData data = 1;
-}
-
-message CloudData {
-    // TODO
-    int32 result = 1;
-}
-
-message CloudResponse {
-    CloudData data = 1;
-}
-
+// SensorService runs on the edge device and
+// streams sensor data to the EdgeService.
 service SensorService {
-    rpc StreamData(SensorRequest) returns (stream SensorResponse);
+    // StreamData will be called by the EdgeService
+    // to initiate a stream of sensor data.
+    rpc StreamData(StreamDataRequest) returns (stream StreamDataResponse);
 }
 
+message Position {
+    double x = 1;
+    double y = 2;
+    double z = 3;
+}
+
+message UpdatePositionRequest {
+    Position position = 1;
+}
+
+message UpdatePositionResponse {
+    // Empty response - no error means position was updated
+}
+
+// EdgeService runs on the edge device and
+// receives sensor data from the SensorService.
+// It also sends aggregated sensor data to the CloudService.
 service EdgeService {
+    // UpdatePosition will be called by the SensorService
+    // to update the position of the edge device.
+    // This endpoint returns nothing,
+    // no error means position was updated successfully.
+    rpc UpdatePosition(UpdatePositionRequest) returns (UpdatePositionResponse);
 }
 
+message ProcessDataRequest {
+    SensorData data = 1;
+}
+
+message ProcessDataResponse {
+    // Empty response - data will be processed asynchronously
+    // and returned to the UpdatePosition endpoint
+}
+
+// CloudService runs on the cloud and processes
+// aggregated sensor data.
 service CloudService {
-    rpc ProcessData(CloudRequest) returns (CloudResponse);
+    // ProcessData will be called by the EdgeService
+    // to process aggregated sensor data.
+    // This endpoint returns nothing,
+    // no error means data was received successfully.
+    // Results will be returned to the UpdatePosition endpoint
+    // in the EdgeService.
+    rpc ProcessData(ProcessDataRequest) returns (ProcessDataResponse);
 }
