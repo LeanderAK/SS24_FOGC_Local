@@ -6,7 +6,6 @@ import grpc
 from grpc_reflection.v1alpha import reflection
 import queue
 import threading
-from requests import post
 from uuid import uuid4
 
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -48,9 +47,12 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         self.task_queue = TaskQueue()
         self.feedback_url = "placeholder_url"
 
-    def ProcessData(self, request, context):
+    def ProcessData(self, request: fog_pb2.ProcessDataRequest, context):
         response_data = fog_pb2.Position(x=10.0, y=20.0, z=0.5)
         print(f"Received data: {request.data}")
+        print(type(request.data))
+        if not request.ListFields():
+            print("Data empty!")
         task = Task(request.data)
         self.task_queue.add_task(task=task)
         
