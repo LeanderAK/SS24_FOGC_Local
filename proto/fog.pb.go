@@ -91,7 +91,7 @@ func (x *SensorData) GetTimestamp() string {
 	return ""
 }
 
-type SensorRequest struct {
+type StreamDataRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -99,8 +99,8 @@ type SensorRequest struct {
 	Id int32 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
 }
 
-func (x *SensorRequest) Reset() {
-	*x = SensorRequest{}
+func (x *StreamDataRequest) Reset() {
+	*x = StreamDataRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[1]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -108,13 +108,13 @@ func (x *SensorRequest) Reset() {
 	}
 }
 
-func (x *SensorRequest) String() string {
+func (x *StreamDataRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SensorRequest) ProtoMessage() {}
+func (*StreamDataRequest) ProtoMessage() {}
 
-func (x *SensorRequest) ProtoReflect() protoreflect.Message {
+func (x *StreamDataRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[1]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -126,19 +126,19 @@ func (x *SensorRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SensorRequest.ProtoReflect.Descriptor instead.
-func (*SensorRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use StreamDataRequest.ProtoReflect.Descriptor instead.
+func (*StreamDataRequest) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *SensorRequest) GetId() int32 {
+func (x *StreamDataRequest) GetId() int32 {
 	if x != nil {
 		return x.Id
 	}
 	return 0
 }
 
-type SensorResponse struct {
+type StreamDataResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
@@ -146,8 +146,8 @@ type SensorResponse struct {
 	Data *SensorData `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *SensorResponse) Reset() {
-	*x = SensorResponse{}
+func (x *StreamDataResponse) Reset() {
+	*x = StreamDataResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[2]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -155,13 +155,13 @@ func (x *SensorResponse) Reset() {
 	}
 }
 
-func (x *SensorResponse) String() string {
+func (x *StreamDataResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*SensorResponse) ProtoMessage() {}
+func (*StreamDataResponse) ProtoMessage() {}
 
-func (x *SensorResponse) ProtoReflect() protoreflect.Message {
+func (x *StreamDataResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[2]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -173,28 +173,30 @@ func (x *SensorResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use SensorResponse.ProtoReflect.Descriptor instead.
-func (*SensorResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use StreamDataResponse.ProtoReflect.Descriptor instead.
+func (*StreamDataResponse) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{2}
 }
 
-func (x *SensorResponse) GetData() *SensorData {
+func (x *StreamDataResponse) GetData() *SensorData {
 	if x != nil {
 		return x.Data
 	}
 	return nil
 }
 
-type EdgeRequest struct {
+type Position struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	Data *SensorData `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	X float64 `protobuf:"fixed64,1,opt,name=x,proto3" json:"x,omitempty"`
+	Y float64 `protobuf:"fixed64,2,opt,name=y,proto3" json:"y,omitempty"`
+	Z float64 `protobuf:"fixed64,3,opt,name=z,proto3" json:"z,omitempty"`
 }
 
-func (x *EdgeRequest) Reset() {
-	*x = EdgeRequest{}
+func (x *Position) Reset() {
+	*x = Position{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[3]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -202,13 +204,13 @@ func (x *EdgeRequest) Reset() {
 	}
 }
 
-func (x *EdgeRequest) String() string {
+func (x *Position) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EdgeRequest) ProtoMessage() {}
+func (*Position) ProtoMessage() {}
 
-func (x *EdgeRequest) ProtoReflect() protoreflect.Message {
+func (x *Position) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[3]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -220,26 +222,42 @@ func (x *EdgeRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use EdgeRequest.ProtoReflect.Descriptor instead.
-func (*EdgeRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use Position.ProtoReflect.Descriptor instead.
+func (*Position) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{3}
 }
 
-func (x *EdgeRequest) GetData() *SensorData {
+func (x *Position) GetX() float64 {
 	if x != nil {
-		return x.Data
+		return x.X
 	}
-	return nil
+	return 0
 }
 
-type EdgeResponse struct {
+func (x *Position) GetY() float64 {
+	if x != nil {
+		return x.Y
+	}
+	return 0
+}
+
+func (x *Position) GetZ() float64 {
+	if x != nil {
+		return x.Z
+	}
+	return 0
+}
+
+type UpdatePositionRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
+
+	Position *Position `protobuf:"bytes,1,opt,name=position,proto3" json:"position,omitempty"`
 }
 
-func (x *EdgeResponse) Reset() {
-	*x = EdgeResponse{}
+func (x *UpdatePositionRequest) Reset() {
+	*x = UpdatePositionRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[4]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -247,13 +265,13 @@ func (x *EdgeResponse) Reset() {
 	}
 }
 
-func (x *EdgeResponse) String() string {
+func (x *UpdatePositionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*EdgeResponse) ProtoMessage() {}
+func (*UpdatePositionRequest) ProtoMessage() {}
 
-func (x *EdgeResponse) ProtoReflect() protoreflect.Message {
+func (x *UpdatePositionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[4]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -265,21 +283,26 @@ func (x *EdgeResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use EdgeResponse.ProtoReflect.Descriptor instead.
-func (*EdgeResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdatePositionRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePositionRequest) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{4}
 }
 
-type CloudRequest struct {
+func (x *UpdatePositionRequest) GetPosition() *Position {
+	if x != nil {
+		return x.Position
+	}
+	return nil
+}
+
+type UpdatePositionResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Data *SensorData `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *CloudRequest) Reset() {
-	*x = CloudRequest{}
+func (x *UpdatePositionResponse) Reset() {
+	*x = UpdatePositionResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[5]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -287,13 +310,13 @@ func (x *CloudRequest) Reset() {
 	}
 }
 
-func (x *CloudRequest) String() string {
+func (x *UpdatePositionResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloudRequest) ProtoMessage() {}
+func (*UpdatePositionResponse) ProtoMessage() {}
 
-func (x *CloudRequest) ProtoReflect() protoreflect.Message {
+func (x *UpdatePositionResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[5]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -305,29 +328,21 @@ func (x *CloudRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloudRequest.ProtoReflect.Descriptor instead.
-func (*CloudRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdatePositionResponse.ProtoReflect.Descriptor instead.
+func (*UpdatePositionResponse) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *CloudRequest) GetData() *SensorData {
-	if x != nil {
-		return x.Data
-	}
-	return nil
-}
-
-type CloudData struct {
+type ProcessDataRequest struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// TODO
-	Result int32 `protobuf:"varint,1,opt,name=result,proto3" json:"result,omitempty"`
+	Data *SensorData `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *CloudData) Reset() {
-	*x = CloudData{}
+func (x *ProcessDataRequest) Reset() {
+	*x = ProcessDataRequest{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[6]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -335,13 +350,13 @@ func (x *CloudData) Reset() {
 	}
 }
 
-func (x *CloudData) String() string {
+func (x *ProcessDataRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloudData) ProtoMessage() {}
+func (*ProcessDataRequest) ProtoMessage() {}
 
-func (x *CloudData) ProtoReflect() protoreflect.Message {
+func (x *ProcessDataRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[6]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -353,28 +368,26 @@ func (x *CloudData) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloudData.ProtoReflect.Descriptor instead.
-func (*CloudData) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProcessDataRequest.ProtoReflect.Descriptor instead.
+func (*ProcessDataRequest) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *CloudData) GetResult() int32 {
+func (x *ProcessDataRequest) GetData() *SensorData {
 	if x != nil {
-		return x.Result
+		return x.Data
 	}
-	return 0
+	return nil
 }
 
-type CloudResponse struct {
+type ProcessDataResponse struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
-
-	Data *CloudData `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
 }
 
-func (x *CloudResponse) Reset() {
-	*x = CloudResponse{}
+func (x *ProcessDataResponse) Reset() {
+	*x = ProcessDataResponse{}
 	if protoimpl.UnsafeEnabled {
 		mi := &file_fog_proto_msgTypes[7]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -382,13 +395,13 @@ func (x *CloudResponse) Reset() {
 	}
 }
 
-func (x *CloudResponse) String() string {
+func (x *ProcessDataResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CloudResponse) ProtoMessage() {}
+func (*ProcessDataResponse) ProtoMessage() {}
 
-func (x *CloudResponse) ProtoReflect() protoreflect.Message {
+func (x *ProcessDataResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_fog_proto_msgTypes[7]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -400,16 +413,9 @@ func (x *CloudResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CloudResponse.ProtoReflect.Descriptor instead.
-func (*CloudResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ProcessDataResponse.ProtoReflect.Descriptor instead.
+func (*ProcessDataResponse) Descriptor() ([]byte, []int) {
 	return file_fog_proto_rawDescGZIP(), []int{7}
-}
-
-func (x *CloudResponse) GetData() *CloudData {
-	if x != nil {
-		return x.Data
-	}
-	return nil
 }
 
 var File_fog_proto protoreflect.FileDescriptor
@@ -422,38 +428,46 @@ var file_fog_proto_rawDesc = []byte{
 	0x74, 0x79, 0x70, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x03, 0x20,
 	0x01, 0x28, 0x09, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x1c, 0x0a, 0x09, 0x74, 0x69,
 	0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x09, 0x74,
-	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x1f, 0x0a, 0x0d, 0x53, 0x65, 0x6e, 0x73,
-	0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a, 0x02, 0x69, 0x64, 0x18,
-	0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x22, 0x37, 0x0a, 0x0e, 0x53, 0x65, 0x6e,
-	0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x04, 0x64,
-	0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x66, 0x6f, 0x67, 0x70,
-	0x62, 0x2e, 0x53, 0x65, 0x6e, 0x73, 0x6f, 0x72, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x64, 0x61,
-	0x74, 0x61, 0x22, 0x34, 0x0a, 0x0b, 0x45, 0x64, 0x67, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x12, 0x25, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32,
-	0x11, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53, 0x65, 0x6e, 0x73, 0x6f, 0x72, 0x44, 0x61,
-	0x74, 0x61, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x0e, 0x0a, 0x0c, 0x45, 0x64, 0x67, 0x65,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x35, 0x0a, 0x0c, 0x43, 0x6c, 0x6f, 0x75,
-	0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x25, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53,
-	0x65, 0x6e, 0x73, 0x6f, 0x72, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22,
-	0x23, 0x0a, 0x09, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x44, 0x61, 0x74, 0x61, 0x12, 0x16, 0x0a, 0x06,
-	0x72, 0x65, 0x73, 0x75, 0x6c, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x06, 0x72, 0x65,
-	0x73, 0x75, 0x6c, 0x74, 0x22, 0x35, 0x0a, 0x0d, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x52, 0x65, 0x73,
-	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x24, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20,
-	0x01, 0x28, 0x0b, 0x32, 0x10, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x43, 0x6c, 0x6f, 0x75,
-	0x64, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x32, 0x4c, 0x0a, 0x0d, 0x53,
-	0x65, 0x6e, 0x73, 0x6f, 0x72, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x3b, 0x0a, 0x0a,
-	0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x44, 0x61, 0x74, 0x61, 0x12, 0x14, 0x2e, 0x66, 0x6f, 0x67,
-	0x70, 0x62, 0x2e, 0x53, 0x65, 0x6e, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x1a, 0x15, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53, 0x65, 0x6e, 0x73, 0x6f, 0x72, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x32, 0x0d, 0x0a, 0x0b, 0x45, 0x64, 0x67,
-	0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x32, 0x48, 0x0a, 0x0c, 0x43, 0x6c, 0x6f, 0x75,
-	0x64, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x38, 0x0a, 0x0b, 0x50, 0x72, 0x6f, 0x63,
-	0x65, 0x73, 0x73, 0x44, 0x61, 0x74, 0x61, 0x12, 0x13, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e,
-	0x43, 0x6c, 0x6f, 0x75, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x66,
-	0x6f, 0x67, 0x70, 0x62, 0x2e, 0x43, 0x6c, 0x6f, 0x75, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x42, 0x0a, 0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x62, 0x06,
-	0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x69, 0x6d, 0x65, 0x73, 0x74, 0x61, 0x6d, 0x70, 0x22, 0x23, 0x0a, 0x11, 0x53, 0x74, 0x72, 0x65,
+	0x61, 0x6d, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x0e, 0x0a,
+	0x02, 0x69, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x05, 0x52, 0x02, 0x69, 0x64, 0x22, 0x3b, 0x0a,
+	0x12, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x12, 0x25, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x0b, 0x32, 0x11, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53, 0x65, 0x6e, 0x73, 0x6f, 0x72,
+	0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x34, 0x0a, 0x08, 0x50, 0x6f,
+	0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x0c, 0x0a, 0x01, 0x78, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x01, 0x52, 0x01, 0x78, 0x12, 0x0c, 0x0a, 0x01, 0x79, 0x18, 0x02, 0x20, 0x01, 0x28, 0x01, 0x52,
+	0x01, 0x79, 0x12, 0x0c, 0x0a, 0x01, 0x7a, 0x18, 0x03, 0x20, 0x01, 0x28, 0x01, 0x52, 0x01, 0x7a,
+	0x22, 0x44, 0x0a, 0x15, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2b, 0x0a, 0x08, 0x70, 0x6f, 0x73,
+	0x69, 0x74, 0x69, 0x6f, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0f, 0x2e, 0x66, 0x6f,
+	0x67, 0x70, 0x62, 0x2e, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x08, 0x70, 0x6f,
+	0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x22, 0x18, 0x0a, 0x16, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65,
+	0x50, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x22, 0x3b, 0x0a, 0x12, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x44, 0x61, 0x74, 0x61, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x25, 0x0a, 0x04, 0x64, 0x61, 0x74, 0x61, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53, 0x65, 0x6e,
+	0x73, 0x6f, 0x72, 0x44, 0x61, 0x74, 0x61, 0x52, 0x04, 0x64, 0x61, 0x74, 0x61, 0x22, 0x15, 0x0a,
+	0x13, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x32, 0x54, 0x0a, 0x0d, 0x53, 0x65, 0x6e, 0x73, 0x6f, 0x72, 0x53, 0x65,
+	0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x43, 0x0a, 0x0a, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x44,
+	0x61, 0x74, 0x61, 0x12, 0x18, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53, 0x74, 0x72, 0x65,
+	0x61, 0x6d, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x19, 0x2e,
+	0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x53, 0x74, 0x72, 0x65, 0x61, 0x6d, 0x44, 0x61, 0x74, 0x61,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x32, 0x5c, 0x0a, 0x0b, 0x45, 0x64,
+	0x67, 0x65, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x4d, 0x0a, 0x0e, 0x55, 0x70, 0x64,
+	0x61, 0x74, 0x65, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x1c, 0x2e, 0x66, 0x6f,
+	0x67, 0x70, 0x62, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x66, 0x6f, 0x67, 0x70,
+	0x62, 0x2e, 0x55, 0x70, 0x64, 0x61, 0x74, 0x65, 0x50, 0x6f, 0x73, 0x69, 0x74, 0x69, 0x6f, 0x6e,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x32, 0x54, 0x0a, 0x0c, 0x43, 0x6c, 0x6f, 0x75,
+	0x64, 0x53, 0x65, 0x72, 0x76, 0x69, 0x63, 0x65, 0x12, 0x44, 0x0a, 0x0b, 0x50, 0x72, 0x6f, 0x63,
+	0x65, 0x73, 0x73, 0x44, 0x61, 0x74, 0x61, 0x12, 0x19, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e,
+	0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x1a, 0x2e, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65,
+	0x73, 0x73, 0x44, 0x61, 0x74, 0x61, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x0a,
+	0x5a, 0x08, 0x2e, 0x2f, 0x3b, 0x66, 0x6f, 0x67, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74,
+	0x6f, 0x33,
 }
 
 var (
@@ -470,29 +484,30 @@ func file_fog_proto_rawDescGZIP() []byte {
 
 var file_fog_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_fog_proto_goTypes = []interface{}{
-	(*SensorData)(nil),     // 0: fogpb.SensorData
-	(*SensorRequest)(nil),  // 1: fogpb.SensorRequest
-	(*SensorResponse)(nil), // 2: fogpb.SensorResponse
-	(*EdgeRequest)(nil),    // 3: fogpb.EdgeRequest
-	(*EdgeResponse)(nil),   // 4: fogpb.EdgeResponse
-	(*CloudRequest)(nil),   // 5: fogpb.CloudRequest
-	(*CloudData)(nil),      // 6: fogpb.CloudData
-	(*CloudResponse)(nil),  // 7: fogpb.CloudResponse
+	(*SensorData)(nil),             // 0: fogpb.SensorData
+	(*StreamDataRequest)(nil),      // 1: fogpb.StreamDataRequest
+	(*StreamDataResponse)(nil),     // 2: fogpb.StreamDataResponse
+	(*Position)(nil),               // 3: fogpb.Position
+	(*UpdatePositionRequest)(nil),  // 4: fogpb.UpdatePositionRequest
+	(*UpdatePositionResponse)(nil), // 5: fogpb.UpdatePositionResponse
+	(*ProcessDataRequest)(nil),     // 6: fogpb.ProcessDataRequest
+	(*ProcessDataResponse)(nil),    // 7: fogpb.ProcessDataResponse
 }
 var file_fog_proto_depIdxs = []int32{
-	0, // 0: fogpb.SensorResponse.data:type_name -> fogpb.SensorData
-	0, // 1: fogpb.EdgeRequest.data:type_name -> fogpb.SensorData
-	0, // 2: fogpb.CloudRequest.data:type_name -> fogpb.SensorData
-	6, // 3: fogpb.CloudResponse.data:type_name -> fogpb.CloudData
-	1, // 4: fogpb.SensorService.StreamData:input_type -> fogpb.SensorRequest
-	5, // 5: fogpb.CloudService.ProcessData:input_type -> fogpb.CloudRequest
-	2, // 6: fogpb.SensorService.StreamData:output_type -> fogpb.SensorResponse
-	7, // 7: fogpb.CloudService.ProcessData:output_type -> fogpb.CloudResponse
-	6, // [6:8] is the sub-list for method output_type
-	4, // [4:6] is the sub-list for method input_type
-	4, // [4:4] is the sub-list for extension type_name
-	4, // [4:4] is the sub-list for extension extendee
-	0, // [0:4] is the sub-list for field type_name
+	0, // 0: fogpb.StreamDataResponse.data:type_name -> fogpb.SensorData
+	3, // 1: fogpb.UpdatePositionRequest.position:type_name -> fogpb.Position
+	0, // 2: fogpb.ProcessDataRequest.data:type_name -> fogpb.SensorData
+	1, // 3: fogpb.SensorService.StreamData:input_type -> fogpb.StreamDataRequest
+	4, // 4: fogpb.EdgeService.UpdatePosition:input_type -> fogpb.UpdatePositionRequest
+	6, // 5: fogpb.CloudService.ProcessData:input_type -> fogpb.ProcessDataRequest
+	2, // 6: fogpb.SensorService.StreamData:output_type -> fogpb.StreamDataResponse
+	5, // 7: fogpb.EdgeService.UpdatePosition:output_type -> fogpb.UpdatePositionResponse
+	7, // 8: fogpb.CloudService.ProcessData:output_type -> fogpb.ProcessDataResponse
+	6, // [6:9] is the sub-list for method output_type
+	3, // [3:6] is the sub-list for method input_type
+	3, // [3:3] is the sub-list for extension type_name
+	3, // [3:3] is the sub-list for extension extendee
+	0, // [0:3] is the sub-list for field type_name
 }
 
 func init() { file_fog_proto_init() }
@@ -514,7 +529,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SensorRequest); i {
+			switch v := v.(*StreamDataRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -526,7 +541,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SensorResponse); i {
+			switch v := v.(*StreamDataResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -538,7 +553,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EdgeRequest); i {
+			switch v := v.(*Position); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -550,7 +565,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EdgeResponse); i {
+			switch v := v.(*UpdatePositionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -562,7 +577,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CloudRequest); i {
+			switch v := v.(*UpdatePositionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -574,7 +589,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CloudData); i {
+			switch v := v.(*ProcessDataRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -586,7 +601,7 @@ func file_fog_proto_init() {
 			}
 		}
 		file_fog_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*CloudResponse); i {
+			switch v := v.(*ProcessDataResponse); i {
 			case 0:
 				return &v.state
 			case 1:

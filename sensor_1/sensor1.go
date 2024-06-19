@@ -14,7 +14,7 @@ type Sensor1Server struct {
 	pb.UnimplementedSensorServiceServer
 }
 
-func (s *Sensor1Server) StreamData(req *pb.SensorRequest, stream pb.SensorService_StreamDataServer) error {
+func (s *Sensor1Server) StreamData(req *pb.StreamDataRequest, stream pb.SensorService_StreamDataServer) error {
 	for {
 		data := &pb.SensorData{
 			Id:        req.Id,
@@ -22,7 +22,7 @@ func (s *Sensor1Server) StreamData(req *pb.SensorRequest, stream pb.SensorServic
 			Value:     "example_value",
 			Timestamp: "example_timestamp",
 		}
-		if err := stream.Send(&pb.SensorResponse{Data: data}); err != nil {
+		if err := stream.Send(&pb.StreamDataResponse{Data: data}); err != nil {
 			return err
 		}
 		time.Sleep(1 * time.Second)

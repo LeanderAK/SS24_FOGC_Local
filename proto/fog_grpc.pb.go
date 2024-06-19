@@ -22,7 +22,9 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SensorServiceClient interface {
-	StreamData(ctx context.Context, in *SensorRequest, opts ...grpc.CallOption) (SensorService_StreamDataClient, error)
+	// StreamData will be called by the EdgeService
+	// to initiate a stream of sensor data.
+	StreamData(ctx context.Context, in *StreamDataRequest, opts ...grpc.CallOption) (SensorService_StreamDataClient, error)
 }
 
 type sensorServiceClient struct {
@@ -33,7 +35,7 @@ func NewSensorServiceClient(cc grpc.ClientConnInterface) SensorServiceClient {
 	return &sensorServiceClient{cc}
 }
 
-func (c *sensorServiceClient) StreamData(ctx context.Context, in *SensorRequest, opts ...grpc.CallOption) (SensorService_StreamDataClient, error) {
+func (c *sensorServiceClient) StreamData(ctx context.Context, in *StreamDataRequest, opts ...grpc.CallOption) (SensorService_StreamDataClient, error) {
 	stream, err := c.cc.NewStream(ctx, &SensorService_ServiceDesc.Streams[0], "/fogpb.SensorService/StreamData", opts...)
 	if err != nil {
 		return nil, err
@@ -49,7 +51,7 @@ func (c *sensorServiceClient) StreamData(ctx context.Context, in *SensorRequest,
 }
 
 type SensorService_StreamDataClient interface {
-	Recv() (*SensorResponse, error)
+	Recv() (*StreamDataResponse, error)
 	grpc.ClientStream
 }
 
@@ -57,8 +59,8 @@ type sensorServiceStreamDataClient struct {
 	grpc.ClientStream
 }
 
-func (x *sensorServiceStreamDataClient) Recv() (*SensorResponse, error) {
-	m := new(SensorResponse)
+func (x *sensorServiceStreamDataClient) Recv() (*StreamDataResponse, error) {
+	m := new(StreamDataResponse)
 	if err := x.ClientStream.RecvMsg(m); err != nil {
 		return nil, err
 	}
@@ -69,7 +71,9 @@ func (x *sensorServiceStreamDataClient) Recv() (*SensorResponse, error) {
 // All implementations must embed UnimplementedSensorServiceServer
 // for forward compatibility
 type SensorServiceServer interface {
-	StreamData(*SensorRequest, SensorService_StreamDataServer) error
+	// StreamData will be called by the EdgeService
+	// to initiate a stream of sensor data.
+	StreamData(*StreamDataRequest, SensorService_StreamDataServer) error
 	mustEmbedUnimplementedSensorServiceServer()
 }
 
@@ -77,7 +81,7 @@ type SensorServiceServer interface {
 type UnimplementedSensorServiceServer struct {
 }
 
-func (UnimplementedSensorServiceServer) StreamData(*SensorRequest, SensorService_StreamDataServer) error {
+func (UnimplementedSensorServiceServer) StreamData(*StreamDataRequest, SensorService_StreamDataServer) error {
 	return status.Errorf(codes.Unimplemented, "method StreamData not implemented")
 }
 func (UnimplementedSensorServiceServer) mustEmbedUnimplementedSensorServiceServer() {}
@@ -94,7 +98,7 @@ func RegisterSensorServiceServer(s grpc.ServiceRegistrar, srv SensorServiceServe
 }
 
 func _SensorService_StreamData_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(SensorRequest)
+	m := new(StreamDataRequest)
 	if err := stream.RecvMsg(m); err != nil {
 		return err
 	}
@@ -102,7 +106,7 @@ func _SensorService_StreamData_Handler(srv interface{}, stream grpc.ServerStream
 }
 
 type SensorService_StreamDataServer interface {
-	Send(*SensorResponse) error
+	Send(*StreamDataResponse) error
 	grpc.ServerStream
 }
 
@@ -110,7 +114,7 @@ type sensorServiceStreamDataServer struct {
 	grpc.ServerStream
 }
 
-func (x *sensorServiceStreamDataServer) Send(m *SensorResponse) error {
+func (x *sensorServiceStreamDataServer) Send(m *StreamDataResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
@@ -135,6 +139,11 @@ var SensorService_ServiceDesc = grpc.ServiceDesc{
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EdgeServiceClient interface {
+	// UpdatePosition will be called by the SensorService
+	// to update the position of the edge device.
+	// This endpoint returns nothing,
+	// no error means position was updated successfully.
+	UpdatePosition(ctx context.Context, in *UpdatePositionRequest, opts ...grpc.CallOption) (*UpdatePositionResponse, error)
 }
 
 type edgeServiceClient struct {
@@ -145,10 +154,24 @@ func NewEdgeServiceClient(cc grpc.ClientConnInterface) EdgeServiceClient {
 	return &edgeServiceClient{cc}
 }
 
+func (c *edgeServiceClient) UpdatePosition(ctx context.Context, in *UpdatePositionRequest, opts ...grpc.CallOption) (*UpdatePositionResponse, error) {
+	out := new(UpdatePositionResponse)
+	err := c.cc.Invoke(ctx, "/fogpb.EdgeService/UpdatePosition", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EdgeServiceServer is the server API for EdgeService service.
 // All implementations must embed UnimplementedEdgeServiceServer
 // for forward compatibility
 type EdgeServiceServer interface {
+	// UpdatePosition will be called by the SensorService
+	// to update the position of the edge device.
+	// This endpoint returns nothing,
+	// no error means position was updated successfully.
+	UpdatePosition(context.Context, *UpdatePositionRequest) (*UpdatePositionResponse, error)
 	mustEmbedUnimplementedEdgeServiceServer()
 }
 
@@ -156,6 +179,9 @@ type EdgeServiceServer interface {
 type UnimplementedEdgeServiceServer struct {
 }
 
+func (UnimplementedEdgeServiceServer) UpdatePosition(context.Context, *UpdatePositionRequest) (*UpdatePositionResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePosition not implemented")
+}
 func (UnimplementedEdgeServiceServer) mustEmbedUnimplementedEdgeServiceServer() {}
 
 // UnsafeEdgeServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -169,22 +195,51 @@ func RegisterEdgeServiceServer(s grpc.ServiceRegistrar, srv EdgeServiceServer) {
 	s.RegisterService(&EdgeService_ServiceDesc, srv)
 }
 
+func _EdgeService_UpdatePosition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdatePositionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EdgeServiceServer).UpdatePosition(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/fogpb.EdgeService/UpdatePosition",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EdgeServiceServer).UpdatePosition(ctx, req.(*UpdatePositionRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EdgeService_ServiceDesc is the grpc.ServiceDesc for EdgeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var EdgeService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "fogpb.EdgeService",
 	HandlerType: (*EdgeServiceServer)(nil),
-	Methods:     []grpc.MethodDesc{},
-	Streams:     []grpc.StreamDesc{},
-	Metadata:    "fog.proto",
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "UpdatePosition",
+			Handler:    _EdgeService_UpdatePosition_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "fog.proto",
 }
 
 // CloudServiceClient is the client API for CloudService service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type CloudServiceClient interface {
-	ProcessData(ctx context.Context, in *CloudRequest, opts ...grpc.CallOption) (*CloudResponse, error)
+	// ProcessData will be called by the EdgeService
+	// to process aggregated sensor data.
+	// This endpoint returns nothing,
+	// no error means data was received successfully.
+	// Results will be returned to the UpdatePosition endpoint
+	// in the EdgeService.
+	ProcessData(ctx context.Context, in *ProcessDataRequest, opts ...grpc.CallOption) (*ProcessDataResponse, error)
 }
 
 type cloudServiceClient struct {
@@ -195,8 +250,8 @@ func NewCloudServiceClient(cc grpc.ClientConnInterface) CloudServiceClient {
 	return &cloudServiceClient{cc}
 }
 
-func (c *cloudServiceClient) ProcessData(ctx context.Context, in *CloudRequest, opts ...grpc.CallOption) (*CloudResponse, error) {
-	out := new(CloudResponse)
+func (c *cloudServiceClient) ProcessData(ctx context.Context, in *ProcessDataRequest, opts ...grpc.CallOption) (*ProcessDataResponse, error) {
+	out := new(ProcessDataResponse)
 	err := c.cc.Invoke(ctx, "/fogpb.CloudService/ProcessData", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -208,7 +263,13 @@ func (c *cloudServiceClient) ProcessData(ctx context.Context, in *CloudRequest, 
 // All implementations must embed UnimplementedCloudServiceServer
 // for forward compatibility
 type CloudServiceServer interface {
-	ProcessData(context.Context, *CloudRequest) (*CloudResponse, error)
+	// ProcessData will be called by the EdgeService
+	// to process aggregated sensor data.
+	// This endpoint returns nothing,
+	// no error means data was received successfully.
+	// Results will be returned to the UpdatePosition endpoint
+	// in the EdgeService.
+	ProcessData(context.Context, *ProcessDataRequest) (*ProcessDataResponse, error)
 	mustEmbedUnimplementedCloudServiceServer()
 }
 
@@ -216,7 +277,7 @@ type CloudServiceServer interface {
 type UnimplementedCloudServiceServer struct {
 }
 
-func (UnimplementedCloudServiceServer) ProcessData(context.Context, *CloudRequest) (*CloudResponse, error) {
+func (UnimplementedCloudServiceServer) ProcessData(context.Context, *ProcessDataRequest) (*ProcessDataResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ProcessData not implemented")
 }
 func (UnimplementedCloudServiceServer) mustEmbedUnimplementedCloudServiceServer() {}
@@ -233,7 +294,7 @@ func RegisterCloudServiceServer(s grpc.ServiceRegistrar, srv CloudServiceServer)
 }
 
 func _CloudService_ProcessData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(CloudRequest)
+	in := new(ProcessDataRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -245,7 +306,7 @@ func _CloudService_ProcessData_Handler(srv interface{}, ctx context.Context, dec
 		FullMethod: "/fogpb.CloudService/ProcessData",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(CloudServiceServer).ProcessData(ctx, req.(*CloudRequest))
+		return srv.(CloudServiceServer).ProcessData(ctx, req.(*ProcessDataRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

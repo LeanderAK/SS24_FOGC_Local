@@ -35,7 +35,7 @@ class SensorData(google.protobuf.message.Message):
 global___SensorData = SensorData
 
 @typing.final
-class SensorRequest(google.protobuf.message.Message):
+class StreamDataRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     ID_FIELD_NUMBER: builtins.int
@@ -47,10 +47,10 @@ class SensorRequest(google.protobuf.message.Message):
     ) -> None: ...
     def ClearField(self, field_name: typing.Literal["id", b"id"]) -> None: ...
 
-global___SensorRequest = SensorRequest
+global___StreamDataRequest = StreamDataRequest
 
 @typing.final
-class SensorResponse(google.protobuf.message.Message):
+class StreamDataResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     DATA_FIELD_NUMBER: builtins.int
@@ -64,10 +64,60 @@ class SensorResponse(google.protobuf.message.Message):
     def HasField(self, field_name: typing.Literal["data", b"data"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["data", b"data"]) -> None: ...
 
-global___SensorResponse = SensorResponse
+global___StreamDataResponse = StreamDataResponse
 
 @typing.final
-class EdgeRequest(google.protobuf.message.Message):
+class Position(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    X_FIELD_NUMBER: builtins.int
+    Y_FIELD_NUMBER: builtins.int
+    Z_FIELD_NUMBER: builtins.int
+    x: builtins.float
+    y: builtins.float
+    z: builtins.float
+    def __init__(
+        self,
+        *,
+        x: builtins.float = ...,
+        y: builtins.float = ...,
+        z: builtins.float = ...,
+    ) -> None: ...
+    def ClearField(self, field_name: typing.Literal["x", b"x", "y", b"y", "z", b"z"]) -> None: ...
+
+global___Position = Position
+
+@typing.final
+class UpdatePositionRequest(google.protobuf.message.Message):
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    POSITION_FIELD_NUMBER: builtins.int
+    @property
+    def position(self) -> global___Position: ...
+    def __init__(
+        self,
+        *,
+        position: global___Position | None = ...,
+    ) -> None: ...
+    def HasField(self, field_name: typing.Literal["position", b"position"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["position", b"position"]) -> None: ...
+
+global___UpdatePositionRequest = UpdatePositionRequest
+
+@typing.final
+class UpdatePositionResponse(google.protobuf.message.Message):
+    """Empty response - no error means position was updated"""
+
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor
+
+    def __init__(
+        self,
+    ) -> None: ...
+
+global___UpdatePositionResponse = UpdatePositionResponse
+
+@typing.final
+class ProcessDataRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     DATA_FIELD_NUMBER: builtins.int
@@ -81,64 +131,18 @@ class EdgeRequest(google.protobuf.message.Message):
     def HasField(self, field_name: typing.Literal["data", b"data"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing.Literal["data", b"data"]) -> None: ...
 
-global___EdgeRequest = EdgeRequest
+global___ProcessDataRequest = ProcessDataRequest
 
 @typing.final
-class EdgeResponse(google.protobuf.message.Message):
+class ProcessDataResponse(google.protobuf.message.Message):
+    """Empty response - data will be processed asynchronously
+    and returned to the UpdatePosition endpoint
+    """
+
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
     def __init__(
         self,
     ) -> None: ...
 
-global___EdgeResponse = EdgeResponse
-
-@typing.final
-class CloudRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_FIELD_NUMBER: builtins.int
-    @property
-    def data(self) -> global___SensorData: ...
-    def __init__(
-        self,
-        *,
-        data: global___SensorData | None = ...,
-    ) -> None: ...
-    def HasField(self, field_name: typing.Literal["data", b"data"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["data", b"data"]) -> None: ...
-
-global___CloudRequest = CloudRequest
-
-@typing.final
-class CloudData(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    RESULT_FIELD_NUMBER: builtins.int
-    result: builtins.int
-    """TODO"""
-    def __init__(
-        self,
-        *,
-        result: builtins.int = ...,
-    ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["result", b"result"]) -> None: ...
-
-global___CloudData = CloudData
-
-@typing.final
-class CloudResponse(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    DATA_FIELD_NUMBER: builtins.int
-    @property
-    def data(self) -> global___CloudData: ...
-    def __init__(
-        self,
-        *,
-        data: global___CloudData | None = ...,
-    ) -> None: ...
-    def HasField(self, field_name: typing.Literal["data", b"data"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["data", b"data"]) -> None: ...
-
-global___CloudResponse = CloudResponse
+global___ProcessDataResponse = ProcessDataResponse

@@ -21,16 +21,16 @@ type EdgeServer struct {
 	cloudClient pb.CloudServiceClient
 }
 
-func (s *EdgeServer) ProcessData(ctx context.Context, req *pb.SensorResponse) error {
+func (s *EdgeServer) processData(ctx context.Context, req *pb.StreamDataResponse) error {
 	log.Printf("Processing data: %+v", req)
 
-	resp, err := s.cloudClient.ProcessData(ctx, &pb.CloudRequest{Data: req.Data})
+	_, err := s.cloudClient.ProcessData(ctx, &pb.ProcessDataRequest{Data: req.Data})
 	if err != nil {
 		return err
 	}
 
 	// Somehow aggregate data
-	log.Printf("Cloud response: %+v", resp)
+	log.Printf("Cloud response ok")
 
 	return nil
 }
@@ -39,7 +39,7 @@ func (s *EdgeServer) handleStream() {
 	var stream pb.SensorService_StreamDataClient
 	var err error
 	for {
-		stream, err = s.sensor1Client.StreamData(s.streamCtx, &pb.SensorRequest{})
+		stream, err = s.sensor1Client.StreamData(s.streamCtx, &pb.StreamDataRequest{})
 		if err == nil {
 			break
 		}
@@ -53,7 +53,7 @@ func (s *EdgeServer) handleStream() {
 			log.Printf("Stream receive error: %v", err)
 			break
 		}
-		err = s.ProcessData(s.streamCtx, resp)
+		err = s.processData(s.streamCtx, resp)
 		if err != nil {
 			log.Printf("Failed to process data: %v", err)
 		}

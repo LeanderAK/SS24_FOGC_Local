@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tfog.proto\x12\x05\x66ogpb\"H\n\nSensorData\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\t\"\x1b\n\rSensorRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"1\n\x0eSensorResponse\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.fogpb.SensorData\".\n\x0b\x45\x64geRequest\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.fogpb.SensorData\"\x0e\n\x0c\x45\x64geResponse\"/\n\x0c\x43loudRequest\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.fogpb.SensorData\"\x1b\n\tCloudData\x12\x0e\n\x06result\x18\x01 \x01(\x05\"/\n\rCloudResponse\x12\x1e\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x10.fogpb.CloudData2L\n\rSensorService\x12;\n\nStreamData\x12\x14.fogpb.SensorRequest\x1a\x15.fogpb.SensorResponse0\x01\x32\r\n\x0b\x45\x64geService2H\n\x0c\x43loudService\x12\x38\n\x0bProcessData\x12\x13.fogpb.CloudRequest\x1a\x14.fogpb.CloudResponseB\nZ\x08./;fogpbb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\tfog.proto\x12\x05\x66ogpb\"H\n\nSensorData\x12\n\n\x02id\x18\x01 \x01(\x05\x12\x0c\n\x04type\x18\x02 \x01(\t\x12\r\n\x05value\x18\x03 \x01(\t\x12\x11\n\ttimestamp\x18\x04 \x01(\t\"\x1f\n\x11StreamDataRequest\x12\n\n\x02id\x18\x01 \x01(\x05\"5\n\x12StreamDataResponse\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.fogpb.SensorData\"+\n\x08Position\x12\t\n\x01x\x18\x01 \x01(\x01\x12\t\n\x01y\x18\x02 \x01(\x01\x12\t\n\x01z\x18\x03 \x01(\x01\":\n\x15UpdatePositionRequest\x12!\n\x08position\x18\x01 \x01(\x0b\x32\x0f.fogpb.Position\"\x18\n\x16UpdatePositionResponse\"5\n\x12ProcessDataRequest\x12\x1f\n\x04\x64\x61ta\x18\x01 \x01(\x0b\x32\x11.fogpb.SensorData\"\x15\n\x13ProcessDataResponse2T\n\rSensorService\x12\x43\n\nStreamData\x12\x18.fogpb.StreamDataRequest\x1a\x19.fogpb.StreamDataResponse0\x01\x32\\\n\x0b\x45\x64geService\x12M\n\x0eUpdatePosition\x12\x1c.fogpb.UpdatePositionRequest\x1a\x1d.fogpb.UpdatePositionResponse2T\n\x0c\x43loudService\x12\x44\n\x0bProcessData\x12\x19.fogpb.ProcessDataRequest\x1a\x1a.fogpb.ProcessDataResponseB\nZ\x08./;fogpbb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -24,24 +24,24 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._serialized_options = b'Z\010./;fogpb'
   _globals['_SENSORDATA']._serialized_start=20
   _globals['_SENSORDATA']._serialized_end=92
-  _globals['_SENSORREQUEST']._serialized_start=94
-  _globals['_SENSORREQUEST']._serialized_end=121
-  _globals['_SENSORRESPONSE']._serialized_start=123
-  _globals['_SENSORRESPONSE']._serialized_end=172
-  _globals['_EDGEREQUEST']._serialized_start=174
-  _globals['_EDGEREQUEST']._serialized_end=220
-  _globals['_EDGERESPONSE']._serialized_start=222
-  _globals['_EDGERESPONSE']._serialized_end=236
-  _globals['_CLOUDREQUEST']._serialized_start=238
-  _globals['_CLOUDREQUEST']._serialized_end=285
-  _globals['_CLOUDDATA']._serialized_start=287
-  _globals['_CLOUDDATA']._serialized_end=314
-  _globals['_CLOUDRESPONSE']._serialized_start=316
-  _globals['_CLOUDRESPONSE']._serialized_end=363
-  _globals['_SENSORSERVICE']._serialized_start=365
-  _globals['_SENSORSERVICE']._serialized_end=441
-  _globals['_EDGESERVICE']._serialized_start=443
-  _globals['_EDGESERVICE']._serialized_end=456
-  _globals['_CLOUDSERVICE']._serialized_start=458
-  _globals['_CLOUDSERVICE']._serialized_end=530
+  _globals['_STREAMDATAREQUEST']._serialized_start=94
+  _globals['_STREAMDATAREQUEST']._serialized_end=125
+  _globals['_STREAMDATARESPONSE']._serialized_start=127
+  _globals['_STREAMDATARESPONSE']._serialized_end=180
+  _globals['_POSITION']._serialized_start=182
+  _globals['_POSITION']._serialized_end=225
+  _globals['_UPDATEPOSITIONREQUEST']._serialized_start=227
+  _globals['_UPDATEPOSITIONREQUEST']._serialized_end=285
+  _globals['_UPDATEPOSITIONRESPONSE']._serialized_start=287
+  _globals['_UPDATEPOSITIONRESPONSE']._serialized_end=311
+  _globals['_PROCESSDATAREQUEST']._serialized_start=313
+  _globals['_PROCESSDATAREQUEST']._serialized_end=366
+  _globals['_PROCESSDATARESPONSE']._serialized_start=368
+  _globals['_PROCESSDATARESPONSE']._serialized_end=389
+  _globals['_SENSORSERVICE']._serialized_start=391
+  _globals['_SENSORSERVICE']._serialized_end=475
+  _globals['_EDGESERVICE']._serialized_start=477
+  _globals['_EDGESERVICE']._serialized_end=569
+  _globals['_CLOUDSERVICE']._serialized_start=571
+  _globals['_CLOUDSERVICE']._serialized_end=655
 # @@protoc_insertion_point(module_scope)
