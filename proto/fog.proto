@@ -7,7 +7,7 @@ option go_package = "./;fogpb";
 message SensorData {
     int32 id = 1;
     string type = 2;
-    int32 value = 3;
+    string value = 3;
     string timestamp = 4;
 }
 
