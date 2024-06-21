@@ -50,7 +50,6 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def ProcessData(self, request: fog_pb2.ProcessDataRequest, context):
         response_data = fog_pb2.Position(x=10.0, y=20.0, z=0.5)
         print(f"Received data: {request.data}")
-        print(type(request.data))
         if not request.ListFields():
             print("Data empty!")
         task = Task(request.data)
@@ -72,17 +71,27 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         task_value = task.value
         
         # compute task result
-        task.result = task_value + " SOME OPERATION"
+        task.result = task_value
         task.processed = True
         return task
     
     def send_feedback(self, task):
-        data = {
-            "result" : task.result
+        print("sending feedback")
+        channel = grpc.insecure_channel('localhost:50052')
+        stub = fog_pb2_grpc.EdgeServiceStub(channel)
+        
+        result_data = {
+            'x' : 4,
+            'y' : 5,
+            'z' : 6
         }
-        # Send data back to feedback_url
-        # post(self.feedback_url, json=data)
-    
+
+        request = fog_pb2.UpdatePositionRequest(position=result_data)
+        try:
+            response = stub.UpdatePosition(request)
+            print("EdgeService response: ", response)
+        except grpc.RpcError as e:
+            print(f"Request to Edge Service faile failed: {e}")
 
 
 def serve():
