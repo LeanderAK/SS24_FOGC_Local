@@ -16,16 +16,14 @@ import (
 
 type EdgeServer struct {
 	pb.UnimplementedEdgeServiceServer
-	sensor1Client    pb.SensorServiceClient
-	sensor1Conn      *grpc.ClientConn
-	streamCtx        context.Context
-	streamCancel     context.CancelFunc
-	sensor1ConnMutex sync.Mutex
-	cloudClient      pb.CloudServiceClient
-	cloudConn        *grpc.ClientConn
-	cloudConnMutex   sync.Mutex
-	queue            chan *pb.StreamDataResponse
-	queueCond        *sync.Cond
+	sensor1Client       pb.SensorServiceClient
+	sensor1Conn         *grpc.ClientConn
+	sensor1ConnMutex    sync.Mutex
+	cloudClient         pb.CloudServiceClient
+	cloudConn           *grpc.ClientConn
+	cloudConnMutex      sync.Mutex
+	queue               chan *pb.StreamDataResponse
+	queueCond           *sync.Cond
 }
 
 func (s *EdgeServer) processStream(ctx context.Context, req *pb.StreamDataResponse) error {
@@ -53,9 +51,11 @@ func (s *EdgeServer) processQueue() {
 		}
 		s.queueCond.L.Unlock()
 
-		err := s.processStream(context.Background(), msg)
+		cloudProcessDataCtx, cloudProcessDataCancel := context.WithTimeout(context.Background(), time.Second)
+		err := s.processStream(cloudProcessDataCtx, msg)
 		if err != nil {
 			log.Printf("Failed to process queued data: %v. Requeuing data.", err)
+			cloudProcessDataCancel()
 			s.queue <- msg
 		}
 	}
@@ -70,7 +70,8 @@ func (s *EdgeServer) handleStream() {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		stream, err = s.sensor1Client.StreamData(s.streamCtx, &pb.StreamDataRequest{})
+		sensor1StreamCtx, sensor1StreamCancel := context.WithCancel(context.Background())
+		stream, err = s.sensor1Client.StreamData(sensor1StreamCtx, &pb.StreamDataRequest{})
 		if err != nil {
 			log.Printf("Failed to start stream: %v. Retrying in 1 second...", err)
 			time.Sleep(1 * time.Second)
@@ -81,6 +82,7 @@ func (s *EdgeServer) handleStream() {
 			resp, err := stream.Recv()
 			if err != nil {
 				log.Printf("Stream receive error: %v", err)
+				sensor1StreamCancel()
 				break
 			}
 			s.queue <- resp
@@ -129,10 +131,6 @@ func (s *EdgeServer) connectToSensor1() {
 			}
 			s.sensor1Conn = conn
 			s.sensor1Client = pb.NewSensorServiceClient(conn)
-			streamCtx, streamCancel := context.WithCancel(context.Background())
-			s.streamCtx = streamCtx
-			s.streamCancel = streamCancel
-
 		}
 		s.sensor1ConnMutex.Unlock()
 
