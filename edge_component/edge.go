@@ -19,9 +19,13 @@ type EdgeServer struct {
 	sensor1Client       pb.SensorServiceClient
 	sensor1Conn         *grpc.ClientConn
 	sensor1ConnMutex    sync.Mutex
+	sensor1StreamCtx	context.Context
+	sensor1StreamCancel context.CancelFunc
 	cloudClient         pb.CloudServiceClient
 	cloudConn           *grpc.ClientConn
 	cloudConnMutex      sync.Mutex
+	cloudProcessDataCtx        context.Context
+	cloudProcessDataCancel     context.CancelFunc
 	queue               chan *pb.StreamDataResponse
 	queueCond           *sync.Cond
 }
@@ -51,11 +55,11 @@ func (s *EdgeServer) processQueue() {
 		}
 		s.queueCond.L.Unlock()
 
-		cloudProcessDataCtx, cloudProcessDataCancel := context.WithTimeout(context.Background(), time.Second)
-		err := s.processStream(cloudProcessDataCtx, msg)
+		s.cloudProcessDataCtx, s.cloudProcessDataCancel = context.WithTimeout(context.Background(), time.Second)
+		err := s.processStream(s.cloudProcessDataCtx, msg)
+		s.cloudProcessDataCancel()
 		if err != nil {
 			log.Printf("Failed to process queued data: %v. Requeuing data.", err)
-			cloudProcessDataCancel()
 			s.queue <- msg
 		}
 	}
@@ -70,10 +74,11 @@ func (s *EdgeServer) handleStream() {
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		sensor1StreamCtx, sensor1StreamCancel := context.WithCancel(context.Background())
-		stream, err = s.sensor1Client.StreamData(sensor1StreamCtx, &pb.StreamDataRequest{})
+		s.sensor1StreamCtx, s.sensor1StreamCancel = context.WithCancel(context.Background())
+		stream, err = s.sensor1Client.StreamData(s.sensor1StreamCtx, &pb.StreamDataRequest{})
 		if err != nil {
 			log.Printf("Failed to start stream: %v. Retrying in 1 second...", err)
+			s.sensor1StreamCancel()
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -82,7 +87,7 @@ func (s *EdgeServer) handleStream() {
 			resp, err := stream.Recv()
 			if err != nil {
 				log.Printf("Stream receive error: %v", err)
-				sensor1StreamCancel()
+				s.sensor1StreamCancel()
 				break
 			}
 			s.queue <- resp
