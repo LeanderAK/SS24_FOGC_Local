@@ -2,8 +2,10 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+	"sync"
 	"time"
 
 	pb "github.com/LeanderAK/SS24_FOGC_Project/proto"
@@ -14,25 +16,52 @@ import (
 
 type EdgeServer struct {
 	pb.UnimplementedEdgeServiceServer
-	sensor1Client pb.SensorServiceClient
-	streamCtx     context.Context
-	streamCancel  context.CancelFunc
-
-	cloudClient pb.CloudServiceClient
+	sensor1Client  pb.SensorServiceClient
+	streamCtx      context.Context
+	streamCancel   context.CancelFunc
+	cloudClient    pb.CloudServiceClient
+	cloudConn      *grpc.ClientConn
+	cloudConnMutex sync.Mutex
+	queue          chan *pb.StreamDataResponse
+	queueCond      *sync.Cond
 }
 
-func (s *EdgeServer) processData(ctx context.Context, req *pb.StreamDataResponse) error {
-	log.Printf("Processing data: %+v", req)
+func (s *EdgeServer) processStream(ctx context.Context, req *pb.StreamDataResponse) error {
+	s.cloudConnMutex.Lock()
+	defer s.cloudConnMutex.Unlock()
+
+	if s.cloudConn == nil {
+		return fmt.Errorf("cloud connection is down")
+	}
 
 	_, err := s.cloudClient.ProcessData(ctx, &pb.ProcessDataRequest{Data: req.Data})
 	if err != nil {
 		return err
 	}
 
-	// Somehow aggregate data
 	log.Printf("Cloud response ok")
-
 	return nil
+}
+
+func (s *EdgeServer) processQueue() {
+	for msg := range s.queue {
+		// Wait for cloud connection to be established
+		s.cloudConnMutex.Lock()
+		for s.cloudConn == nil {
+			s.cloudConnMutex.Unlock()
+			s.queueCond.L.Lock()
+			s.queueCond.Wait()
+			s.queueCond.L.Unlock()
+			s.cloudConnMutex.Lock()
+		}
+		s.cloudConnMutex.Unlock()
+
+		err := s.processStream(context.Background(), msg)
+		if err != nil {
+			log.Printf("Failed to process queued data: %v. Requeuing data.", err)
+			s.queue <- msg
+		}
+	}
 }
 
 func (s *EdgeServer) handleStream() {
@@ -53,15 +82,38 @@ func (s *EdgeServer) handleStream() {
 			log.Printf("Stream receive error: %v", err)
 			break
 		}
-		err = s.processData(s.streamCtx, resp)
-		if err != nil {
-			log.Printf("Failed to process data: %v", err)
+		s.queue <- resp
+	}
+}
+
+func (s *EdgeServer) UpdatePosition(ctx context.Context, req *pb.UpdatePositionRequest) (*pb.UpdatePositionResponse, error) {
+	log.Printf("Received position update: %+v", req.Position)
+	return &pb.UpdatePositionResponse{}, nil
+}
+
+func (s *EdgeServer) connectToCloud() {
+	for {
+		s.cloudConnMutex.Lock()
+		if s.cloudConn == nil {
+			log.Println("Connecting to cloud...")
+			conn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
+			if err != nil {
+				log.Printf("Failed to connect to cloud: %v. Retrying in 1 second...", err)
+				s.cloudConnMutex.Unlock()
+				time.Sleep(1 * time.Second)
+				continue
+			}
+			s.cloudConn = conn
+			s.cloudClient = pb.NewCloudServiceClient(conn)
+			s.queueCond.Broadcast()
 		}
+		s.cloudConnMutex.Unlock()
+
+		time.Sleep(1 * time.Second)
 	}
 }
 
 func main() {
-	// Set up the connection to sensor1
 	sensor1Conn, err := grpc.NewClient("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatalf("Failed to connect to sensor 1: %v", err)
@@ -70,19 +122,12 @@ func main() {
 	sensor1Client := pb.NewSensorServiceClient(sensor1Conn)
 	streamCtx, streamCancel := context.WithCancel(context.Background())
 
-	// Set up the connection to cloud
-	cloudConn, err := grpc.NewClient("localhost:50051", grpc.WithTransportCredentials(insecure.NewCredentials()))
-	if err != nil {
-		log.Fatalf("Failed to connect to cloud: %v", err)
-	}
-	defer cloudConn.Close()
-	cloudClient := pb.NewCloudServiceClient(cloudConn)
-
 	edgeServer := &EdgeServer{
 		sensor1Client: sensor1Client,
 		streamCtx:     streamCtx,
 		streamCancel:  streamCancel,
-		cloudClient:   cloudClient,
+		queue:         make(chan *pb.StreamDataResponse, 100),
+		queueCond:     sync.NewCond(&sync.Mutex{}),
 	}
 
 	grpcServer := grpc.NewServer()
@@ -93,13 +138,12 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	// Enable reflection (for grpcui and grpcurl)
 	reflection.Register(grpcServer)
 
-	// Start the stream handler in a separate goroutine
 	go edgeServer.handleStream()
+	go edgeServer.connectToCloud()
+	go edgeServer.processQueue()
 
-	// Server has no endpoints for now, maybe add some later if needed
 	log.Printf("Starting gRPC server on port 50052")
 	if err := grpcServer.Serve(listener); err != nil {
 		log.Fatalf("Failed to serve: %v", err)
