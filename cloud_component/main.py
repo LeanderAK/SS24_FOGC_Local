@@ -46,6 +46,8 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def __init__(self):
         self.task_queue = TaskQueue()
         self.feedback_url = "placeholder_url"
+        self.channel = grpc.insecure_channel('localhost:50052')
+        self.stub = fog_pb2_grpc.EdgeServiceStub(self.channel)
 
     def ProcessData(self, request: fog_pb2.ProcessDataRequest, context):
         response_data = fog_pb2.Position(x=10.0, y=20.0, z=0.5)
@@ -77,8 +79,6 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
     
     def send_feedback(self, task):
         print("sending feedback")
-        channel = grpc.insecure_channel('localhost:50052')
-        stub = fog_pb2_grpc.EdgeServiceStub(channel)
         
         result_data = {
             'x' : 4,
@@ -88,7 +88,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
 
         request = fog_pb2.UpdatePositionRequest(position=result_data)
         try:
-            response = stub.UpdatePosition(request)
+            response = self.stub.UpdatePosition(request)
             print("EdgeService response: ", response)
         except grpc.RpcError as e:
             print(f"Request to Edge Service faile failed: {e}")
