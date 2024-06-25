@@ -16,18 +16,56 @@ import (
 
 type EdgeServer struct {
 	pb.UnimplementedEdgeServiceServer
+
+	queue     chan *pb.StreamDataResponse
+	queueCond *sync.Cond
+
 	sensor1Client       pb.SensorServiceClient
 	sensor1Conn         *grpc.ClientConn
 	sensor1ConnMutex    sync.Mutex
-	sensor1StreamCtx	context.Context
+	sensor1StreamCtx    context.Context
 	sensor1StreamCancel context.CancelFunc
-	cloudClient         pb.CloudServiceClient
-	cloudConn           *grpc.ClientConn
-	cloudConnMutex      sync.Mutex
-	cloudProcessDataCtx        context.Context
-	cloudProcessDataCancel     context.CancelFunc
-	queue               chan *pb.StreamDataResponse
-	queueCond           *sync.Cond
+
+	cloudClient            pb.CloudServiceClient
+	cloudConn              *grpc.ClientConn
+	cloudConnMutex         sync.Mutex
+	cloudProcessDataCtx    context.Context
+	cloudProcessDataCancel context.CancelFunc
+}
+
+func (s *EdgeServer) UpdatePosition(ctx context.Context, req *pb.UpdatePositionRequest) (*pb.UpdatePositionResponse, error) {
+	log.Printf("Received position update: %+v", req.Position)
+	return &pb.UpdatePositionResponse{}, nil
+}
+
+func (s *EdgeServer) handleStream() {
+	var stream pb.SensorService_StreamDataClient
+	var err error
+	for {
+		if s.sensor1Client == nil {
+			log.Println("Sensor 1 client not connected. Retrying in 1 second...")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		s.sensor1StreamCtx, s.sensor1StreamCancel = context.WithCancel(context.Background())
+		stream, err = s.sensor1Client.StreamData(s.sensor1StreamCtx, &pb.StreamDataRequest{})
+		if err != nil {
+			log.Printf("Failed to start stream: %v. Retrying in 1 second...", err)
+			s.sensor1StreamCancel()
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		for {
+			resp, err := stream.Recv()
+			if err != nil {
+				log.Printf("Stream receive error: %v", err)
+				s.sensor1StreamCancel()
+				break
+			}
+			s.queue <- resp
+		}
+	}
 }
 
 func (s *EdgeServer) processStream(ctx context.Context, req *pb.StreamDataResponse) error {
@@ -63,41 +101,6 @@ func (s *EdgeServer) processQueue() {
 			s.queue <- msg
 		}
 	}
-}
-
-func (s *EdgeServer) handleStream() {
-	var stream pb.SensorService_StreamDataClient
-	var err error
-	for {
-		if s.sensor1Client == nil {
-			log.Println("Sensor 1 client not connected. Retrying in 1 second...")
-			time.Sleep(1 * time.Second)
-			continue
-		}
-		s.sensor1StreamCtx, s.sensor1StreamCancel = context.WithCancel(context.Background())
-		stream, err = s.sensor1Client.StreamData(s.sensor1StreamCtx, &pb.StreamDataRequest{})
-		if err != nil {
-			log.Printf("Failed to start stream: %v. Retrying in 1 second...", err)
-			s.sensor1StreamCancel()
-			time.Sleep(1 * time.Second)
-			continue
-		}
-
-		for {
-			resp, err := stream.Recv()
-			if err != nil {
-				log.Printf("Stream receive error: %v", err)
-				s.sensor1StreamCancel()
-				break
-			}
-			s.queue <- resp
-		}
-	}
-}
-
-func (s *EdgeServer) UpdatePosition(ctx context.Context, req *pb.UpdatePositionRequest) (*pb.UpdatePositionResponse, error) {
-	log.Printf("Received position update: %+v", req.Position)
-	return &pb.UpdatePositionResponse{}, nil
 }
 
 func (s *EdgeServer) connectToCloud() {
