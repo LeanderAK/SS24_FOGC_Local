@@ -49,6 +49,12 @@ class TaskQueue:
 
         self.load_tasks_from_replica_queue()
 
+    def init_persistence_file(self):
+        if not os.path.exists(self.persistence_file_path):
+            with open(self.persistence_file_path, "w") as f:
+                print("creating replica file")
+                res = dump([], f)
+
     def load_tasks_from_replica_queue(self):
         if os.path.exists(self.persistence_file_path):
             with open(self.persistence_file_path, "r") as f:
@@ -56,13 +62,16 @@ class TaskQueue:
                 for task in backup_data:
                     instance_task = Task.from_dict(task)
                     self.add_task(task=instance_task)
+        else:
+            print("replica file not found!")
 
     def write_tasks_to_replica_queue(self):
         if os.path.exists(self.persistence_file_path):
             with open(self.persistence_file_path, "w") as f:
                 task_list = [task.to_dict() for task in self.tasks]
-                print("Task list:", task_list)
                 res = dump(task_list, f)
+        else:
+            print("replica file not found!")
                 
     def add_task(self, task: Task):
         with self.lock:
@@ -95,6 +104,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def __init__(self):
         self.task_queue = TaskQueue()
         self.feedback_url = "placeholder_url"
+        self.task_queue.init_persistence_file()
 
     def ProcessData(self, request: fog_pb2.ProcessDataRequest, context):
         response_data = fog_pb2.Position(x=10.0, y=20.0, z=0.5)
