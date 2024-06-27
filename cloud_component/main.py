@@ -123,10 +123,10 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
             if task_peek:
                 if task_peek.processed == False:
                     self.process_task(task=task_peek)
-                response = self.send_feedback(task=task_peek)
-
-                #TODO if result is success, remove the peeked task from queue
-                self.task_queue.get_task()
+                feedback_success = self.send_feedback(task=task_peek)
+                if feedback_success == True:
+                    self.task_queue.get_task()
+                    
                 time.sleep(1)
             else:
                 time.sleep(1)
@@ -152,10 +152,11 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
 
         request = fog_pb2.UpdatePositionRequest(position=result_data)
         try:
-            response = stub.UpdatePosition(request)
-            return response
+            stub.UpdatePosition(request)
+            return True
         except grpc.RpcError as e:
-            print("Request to Edge Service failed!")
+            status_code = e.code()
+            print(f"Request to Edge Service failed with error: {status_code.name} ({status_code.value})")
 
 
 def serve():
