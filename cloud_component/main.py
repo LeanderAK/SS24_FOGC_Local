@@ -1,3 +1,5 @@
+from collections import deque
+from json import dump, load
 import os
 import sys
 from concurrent import futures
@@ -16,61 +18,122 @@ import proto.fog_pb2 as fog_pb2  # noqa
 import proto.fog_pb2_grpc as fog_pb2_grpc  # noqa
 
 class Task:
-    def __init__(self, sensor_data):
-        self.id = uuid4()
-        self.value = sensor_data.value
-        self.result = None
-        self.processed = False
+    def __init__(self,value, task_id=None, result= None, processed= False):
+        if task_id is None:
+            task_id=uuid4()
+        self.id = task_id
+        self.value = value
+        self.result = result
+        self.processed = processed
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "value": self.value,
+            "result": self.result,
+            "processed": self.processed
+        }
+
+    @classmethod
+    def from_dict(cls, data):
+        return cls(value=data["value"], task_id=data["id"], result=data["result"], processed=data["processed"])
 
     def __str__(self):
         return f'Task_id: {self.id}, processed: {self.processed}'
     
 class TaskQueue:
     def __init__(self):
-        self.tasks = queue.Queue()
+        self.tasks = deque()
         self.lock = threading.Lock()
+        self.persistence_file_path = os.path.join(os.path.dirname(__file__), "queue_replica.json")
 
+        self.load_tasks_from_replica_queue()
+
+    def init_persistence_file(self):
+        if not os.path.exists(self.persistence_file_path):
+            with open(self.persistence_file_path, "w") as f:
+                print("creating replica file")
+                res = dump([], f)
+
+    def load_tasks_from_replica_queue(self):
+        if os.path.exists(self.persistence_file_path):
+            with open(self.persistence_file_path, "r") as f:
+                backup_data = load(f)
+                for task in backup_data:
+                    instance_task = Task.from_dict(task)
+                    self.add_task(task=instance_task)
+        else:
+            print("replica file not found!")
+
+    def write_tasks_to_replica_queue(self):
+        if os.path.exists(self.persistence_file_path):
+            with open(self.persistence_file_path, "w") as f:
+                task_list = [task.to_dict() for task in self.tasks]
+                res = dump(task_list, f)
+        else:
+            print("replica file not found!")
+                
     def add_task(self, task: Task):
         with self.lock:
-            self.tasks.put(task)
+            self.tasks.append(task)
+            self.write_tasks_to_replica_queue()
+
+    def add_task_to_front(self, task: Task):
+        with self.lock:
+            self.tasks.appendleft(task)
+            self.write_tasks_to_replica_queue()
 
     def get_task(self) -> Task:
         with self.lock:
-            if not self.tasks.empty():
-                task = self.tasks.get()
+            if self.tasks:
+                task = self.tasks.popleft()
+                self.write_tasks_to_replica_queue()
                 return task
             else:
                 return None
+
+    def peek_task(self) -> Task:
+        with self.lock:
+            if self.tasks:
+                return self.tasks[0]
+            else:
+                return None
+
             
 class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def __init__(self):
         self.task_queue = TaskQueue()
         self.feedback_url = "placeholder_url"
+        self.task_queue.init_persistence_file()
 
     def ProcessData(self, request: fog_pb2.ProcessDataRequest, context):
         response_data = fog_pb2.Position(x=10.0, y=20.0, z=0.5)
         print(f"Received data: {request.data}")
         if not request.ListFields():
             print("Data empty!")
-        task = Task(request.data)
+
+        task = Task(value=request.data.value)
         self.task_queue.add_task(task=task)
         
         return fog_pb2.ProcessDataResponse()
 
     def process_task_queue(self):
         while True:
-            task = self.task_queue.get_task()
-            if task:
-                if task.processed == False:
-                    self.process_task(task=task)
-                self.send_feedback(task=task)
+            task_peek = self.task_queue.peek_task()
+            if task_peek:
+                if task_peek.processed == False:
+                    self.process_task(task=task_peek)
+                feedback_success = self.send_feedback(task=task_peek)
+                if feedback_success == True:
+                    self.task_queue.get_task()
+                    
+                time.sleep(1)
             else:
                 time.sleep(1)
 
     def process_task(self, task: Task):
         task_value = task.value
         
-        # compute task result
         task.result = task_value
         task.processed = True
         return task
@@ -80,6 +143,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         channel = grpc.insecure_channel('localhost:50052')
         stub = fog_pb2_grpc.EdgeServiceStub(channel)
         
+        # TODO send actual data
         result_data = {
             'x' : 4,
             'y' : 5,
@@ -88,10 +152,11 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
 
         request = fog_pb2.UpdatePositionRequest(position=result_data)
         try:
-            response = stub.UpdatePosition(request)
-            print("EdgeService response: ", response)
+            stub.UpdatePosition(request)
+            return True
         except grpc.RpcError as e:
-            print(f"Request to Edge Service faile failed: {e}")
+            status_code = e.code()
+            print(f"Request to Edge Service failed with error: {status_code.name} ({status_code.value})")
 
 
 def serve():
