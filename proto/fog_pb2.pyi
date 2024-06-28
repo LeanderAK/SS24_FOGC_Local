@@ -14,23 +14,23 @@ DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
 class SensorData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    ID_FIELD_NUMBER: builtins.int
+    SENSOR_ID_FIELD_NUMBER: builtins.int
     TYPE_FIELD_NUMBER: builtins.int
     VALUE_FIELD_NUMBER: builtins.int
     TIMESTAMP_FIELD_NUMBER: builtins.int
-    id: builtins.int
+    sensor_id: builtins.str
     type: builtins.str
     value: builtins.str
     timestamp: builtins.str
     def __init__(
         self,
         *,
-        id: builtins.int = ...,
+        sensor_id: builtins.str = ...,
         type: builtins.str = ...,
         value: builtins.str = ...,
         timestamp: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["id", b"id", "timestamp", b"timestamp", "type", b"type", "value", b"value"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["sensor_id", b"sensor_id", "timestamp", b"timestamp", "type", b"type", "value", b"value"]) -> None: ...
 
 global___SensorData = SensorData
 

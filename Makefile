@@ -27,12 +27,12 @@ stop_sensor1:
 	sudo /bin/sh -c 'pid=$$(lsof -t -i:50053) && [ -n "$$pid" ] && sudo kill -9 $$pid || true'
 
 sensor1: protogen
-	SENSOR_PORT=50053 go run sensor/sensor.go
+	SENSOR_ID=1 SENSOR_TYPE="velocity" SENSOR_PORT=50053 go run sensor/sensor.go
 
 stop_sensor2:
 	sudo /bin/sh -c 'pid=$$(lsof -t -i:50054) && [ -n "$$pid" ] && sudo kill -9 $$pid || true'
 
 sensor2: protogen
-	SENSOR_PORT=50054 go run sensor/sensor.go
+	SENSOR_ID=2 SENSOR_TYPE="gyroscope" SENSOR_PORT=50054 go run sensor/sensor.go
 
 stop: stop_cloud stop_edge stop_sensor1 stop_sensor2
