@@ -101,13 +101,12 @@ func (s *EdgeServer) processStream(ctx context.Context, req *pb.StreamDataRespon
 		return err
 	}
 
-	log.Printf("Cloud response ok")
 	return nil
 }
 
 func (s *EdgeServer) processQueue() {
 	for msg := range s.queue {
-		fmt.Println("Queue length: ", len(s.queue))
+		log.Printf("Queue length: %d", len(s.queue))
 		s.queueCond.L.Lock()
 		for s.cloud.cloudConn == nil {
 			s.queueCond.Wait()
@@ -118,8 +117,10 @@ func (s *EdgeServer) processQueue() {
 		err := s.processStream(ctx, msg)
 		cancel()
 		if err != nil {
-			log.Printf("Failed to process queued data: %v. Requeuing data.", err)
+			log.Printf("Failed to process queued data: %v. Requeuing data and waiting 1 second.", err)
 			s.queue <- msg
+			time.Sleep(1 * time.Second)
+			continue
 		}
 	}
 }
