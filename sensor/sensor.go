@@ -47,7 +47,7 @@ func generateData(sensorId, sensorType string) (*pb.SensorData, error) {
 			SensorId:  sensorId,
 			Type:      pb.SensorType_GYROSCOPE,
 			Value:     fmt.Sprintf("%.2f", rand.Float64()*360),
-			Timestamp: time.Now().UTC().Format(time.RFC1123),
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
 		}, nil
 	default:
 		return nil, fmt.Errorf("Unknown sensor type: %s", sensorType)
