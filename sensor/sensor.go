@@ -30,24 +30,27 @@ func (s *Sensor1Server) StreamData(req *pb.StreamDataRequest, stream pb.SensorSe
 	}
 }
 
+func getEnv() (sensorIp, sensorPort string) {
+	sensorIp = os.Getenv("SENSOR_IP")
+	if sensorIp == "" {
+		sensorIp = "0.0.0.0"
+	}
+	sensorPort = os.Getenv("SENSOR_PORT")
+	if sensorPort == "" {
+		sensorPort = "50053"
+	}
+	return sensorIp, sensorPort
+}
+
 func main() {
-	ip := os.Getenv("SERVER_IP")
-	if ip == "" {
-		ip = "0.0.0.0"
-	}
-
-	port := os.Getenv("SERVER_PORT")
-	if port == "" {
-		port = "50053"
-	}
-
-	address := net.JoinHostPort(ip, port)
+	ip, port := getEnv()
 
 	grpcServer := grpc.NewServer()
 
 	sensorServer := &Sensor1Server{}
 	pb.RegisterSensorServiceServer(grpcServer, sensorServer)
 
+	address := net.JoinHostPort(ip, port)
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
