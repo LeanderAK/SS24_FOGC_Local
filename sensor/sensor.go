@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"os"
 	"time"
@@ -32,20 +33,21 @@ func (s *Sensor1Server) StreamData(req *pb.StreamDataRequest, stream pb.SensorSe
 }
 
 func generateData(sensorId, sensorType string) (*pb.SensorData, error) {
+	rand.Seed(time.Now().UnixNano())
 	switch sensorType {
 	case "velocity":
 		return &pb.SensorData{
 			SensorId:  sensorId,
 			Type:      pb.SensorType_VELOCITY,
-			Value:     "12.34",
-			Timestamp: time.Now().Format(time.RFC3339),
+			Value:     fmt.Sprintf("%.2f", rand.Float64()*100),
+			Timestamp: time.Now().UTC().Format(time.RFC3339),
 		}, nil
 	case "gyroscope":
 		return &pb.SensorData{
 			SensorId:  sensorId,
 			Type:      pb.SensorType_GYROSCOPE,
-			Value:     "180.24",
-			Timestamp: time.Now().Format(time.RFC3339),
+			Value:     fmt.Sprintf("%.2f", rand.Float64()*360),
+			Timestamp: time.Now().UTC().Format(time.RFC1123),
 		}, nil
 	default:
 		return nil, fmt.Errorf("Unknown sensor type: %s", sensorType)
