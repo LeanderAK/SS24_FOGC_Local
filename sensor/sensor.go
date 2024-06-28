@@ -33,7 +33,7 @@ func (s *Sensor1Server) StreamData(req *pb.StreamDataRequest, stream pb.SensorSe
 }
 
 func generateData(sensorId, sensorType string) (*pb.SensorData, error) {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	switch sensorType {
 	case "velocity":
 		return &pb.SensorData{
