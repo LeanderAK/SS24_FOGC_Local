@@ -14,17 +14,22 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
+type Sensor struct {
+	id           string
+	client       *pb.SensorServiceClient
+	connMutex    sync.Mutex
+	streamCtx    *context.Context
+	streamCancel *context.CancelFunc
+}
+
 type EdgeServer struct {
 	pb.UnimplementedEdgeServiceServer
 
 	queue     chan *pb.StreamDataResponse
 	queueCond *sync.Cond
 
-	sensor1Client       pb.SensorServiceClient
-	sensor1Conn         *grpc.ClientConn
-	sensor1ConnMutex    sync.Mutex
-	sensor1StreamCtx    context.Context
-	sensor1StreamCancel context.CancelFunc
+	sensor1Client *Sensor
+	sensor2Client *Sensor
 
 	cloudClient            pb.CloudServiceClient
 	cloudConn              *grpc.ClientConn
@@ -38,20 +43,21 @@ func (s *EdgeServer) UpdatePosition(ctx context.Context, req *pb.UpdatePositionR
 	return &pb.UpdatePositionResponse{}, nil
 }
 
-func (s *EdgeServer) handleStream() {
+func (s *EdgeServer) handleSensorStream(sensor **Sensor) {
 	var stream pb.SensorService_StreamDataClient
 	var err error
 	for {
-		if s.sensor1Client == nil {
-			log.Println("Sensor 1 client not connected. Retrying in 1 second...")
+		if *sensor == nil {
+			log.Println("Sensor 1 client not connected. ")
 			time.Sleep(1 * time.Second)
 			continue
 		}
-		s.sensor1StreamCtx, s.sensor1StreamCancel = context.WithCancel(context.Background())
-		stream, err = s.sensor1Client.StreamData(s.sensor1StreamCtx, &pb.StreamDataRequest{})
+		ctx, cancel := context.WithCancel(context.Background())
+		client := *(*sensor).client
+		stream, err = client.StreamData(ctx, &pb.StreamDataRequest{})
 		if err != nil {
-			log.Printf("Failed to start stream: %v. Retrying in 1 second...", err)
-			s.sensor1StreamCancel()
+			log.Printf("Failed to start stream with sensor %s: %v. Retrying in 1 second...", (*sensor).id, err)
+			cancel()
 			time.Sleep(1 * time.Second)
 			continue
 		}
@@ -60,7 +66,7 @@ func (s *EdgeServer) handleStream() {
 			resp, err := stream.Recv()
 			if err != nil {
 				log.Printf("Stream receive error: %v", err)
-				s.sensor1StreamCancel()
+				cancel()
 				break
 			}
 			s.queue <- resp
@@ -103,7 +109,7 @@ func (s *EdgeServer) processQueue() {
 	}
 }
 
-func (s *EdgeServer) connectToCloud() {
+func (s *EdgeServer) establishCloudConnection() {
 	for {
 		s.cloudConnMutex.Lock()
 		if s.cloudConn == nil {
@@ -125,24 +131,35 @@ func (s *EdgeServer) connectToCloud() {
 	}
 }
 
-func (s *EdgeServer) connectToSensor1() {
-	for {
-		s.sensor1ConnMutex.Lock()
-		if s.sensor1Conn == nil {
-			log.Println("Connecting to sensor 1...")
-			conn, err := grpc.NewClient("localhost:50053", grpc.WithTransportCredentials(insecure.NewCredentials()))
-			if err != nil {
-				log.Printf("Failed to connect to sensor 1: %v. Retrying in 1 second...", err)
-				s.sensor1ConnMutex.Unlock()
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			s.sensor1Conn = conn
-			s.sensor1Client = pb.NewSensorServiceClient(conn)
-		}
-		s.sensor1ConnMutex.Unlock()
+func (s *EdgeServer) connectToSensor(id, ip string, port uint16) (sensor *Sensor, err error) {
+	log.Printf("Connecting to sensor %s...", id)
+	target := fmt.Sprintf("%s:%d", ip, port)
+	conn, err := grpc.NewClient(target, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to sensor %s: %v", id, err)
+	}
+	client := pb.NewSensorServiceClient(conn)
+	return &Sensor{
+		id:        id,
+		client:    &client,
+		connMutex: sync.Mutex{},
+	}, nil
+}
 
-		time.Sleep(1 * time.Second)
+func (s *EdgeServer) establishSensorConnection(sensor **Sensor, id, ip string, port uint16) {
+	for {
+		if *sensor != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		log.Printf("Attempting client connection with sensor id=%s", id)
+		newSensor, err := s.connectToSensor(id, ip, port)
+		if err != nil {
+			log.Printf("Failed to connect to sensor %s: %v. Retrying in 1 second", id, err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		*sensor = newSensor
 	}
 }
 
@@ -163,9 +180,11 @@ func main() {
 
 	reflection.Register(grpcServer)
 
-	go edgeServer.connectToSensor1()
-	go edgeServer.connectToCloud()
-	go edgeServer.handleStream()
+	go edgeServer.establishSensorConnection(&edgeServer.sensor1Client, "1", "localhost", uint16(50053))
+	go edgeServer.establishSensorConnection(&edgeServer.sensor2Client, "2", "localhost", uint16(50054))
+	go edgeServer.handleSensorStream(&edgeServer.sensor1Client)
+	go edgeServer.handleSensorStream(&edgeServer.sensor2Client)
+	go edgeServer.establishCloudConnection()
 	go edgeServer.processQueue()
 
 	log.Printf("Starting gRPC server on port 50052")
