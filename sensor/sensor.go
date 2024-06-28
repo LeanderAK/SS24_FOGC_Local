@@ -36,14 +36,14 @@ func generateData(sensorId, sensorType string) (*pb.SensorData, error) {
 	case "velocity":
 		return &pb.SensorData{
 			SensorId:  sensorId,
-			Type:      sensorType,
+			Type:      pb.SensorType_VELOCITY,
 			Value:     "12.34",
 			Timestamp: time.Now().Format(time.RFC3339),
 		}, nil
 	case "gyroscope":
 		return &pb.SensorData{
 			SensorId:  sensorId,
-			Type:      sensorType,
+			Type:      pb.SensorType_GYROSCOPE,
 			Value:     "180.24",
 			Timestamp: time.Now().Format(time.RFC3339),
 		}, nil

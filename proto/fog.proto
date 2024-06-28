@@ -4,9 +4,15 @@ package fogpb;
 option go_package = "./;fogpb";
 
 
+enum SensorType {
+    UNKNOWN = 0;
+    VELOCITY = 1;
+    GYROSCOPE = 2;
+}
+
 message SensorData {
     string sensor_id = 1;
-    string type = 2;
+    SensorType type = 2;
     string value = 3;
     string timestamp = 4;
 }
