@@ -14,19 +14,25 @@ protoclean:
 stop_cloud:
 	sudo /bin/sh -c 'pid=$$(lsof -t -i:50051) && [ -n "$$pid" ] && sudo kill -9 $$pid || true'
 
-cloud: protogen stop_cloud
+cloud: protogen
 	python3 cloud_component/main.py
 
 stop_edge:
 	sudo /bin/sh -c 'pid=$$(lsof -t -i:50052) && [ -n "$$pid" ] && sudo kill -9 $$pid || true'
 
-edge: protogen stop_edge
-	go run edge_component/edge.go
+edge: protogen
+	CLOUD_PORT=50051 EDGE_PORT=50052 SENSOR1_PORT=50053 SENSOR2_PORT=50054 go run edge/edge.go
 
 stop_sensor1:
 	sudo /bin/sh -c 'pid=$$(lsof -t -i:50053) && [ -n "$$pid" ] && sudo kill -9 $$pid || true'
 
-sensor1: protogen stop_sensor1
-	go run sensor_1/sensor1.go
+sensor1: protogen
+	SENSOR_ID=1 SENSOR_TYPE="velocity" SENSOR_PORT=50053 go run sensor/sensor.go
 
-stop: stop_cloud stop_edge stop_sensor1
+stop_sensor2:
+	sudo /bin/sh -c 'pid=$$(lsof -t -i:50054) && [ -n "$$pid" ] && sudo kill -9 $$pid || true'
+
+sensor2: protogen
+	SENSOR_ID=2 SENSOR_TYPE="gyroscope" SENSOR_PORT=50054 go run sensor/sensor.go
+
+stop: stop_cloud stop_edge stop_sensor1 stop_sensor2

@@ -5,32 +5,56 @@ isort:skip_file
 
 import builtins
 import google.protobuf.descriptor
+import google.protobuf.internal.enum_type_wrapper
 import google.protobuf.message
+import sys
 import typing
 
+if sys.version_info >= (3, 10):
+    import typing as typing_extensions
+else:
+    import typing_extensions
+
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor
+
+class _SensorType:
+    ValueType = typing.NewType("ValueType", builtins.int)
+    V: typing_extensions.TypeAlias = ValueType
+
+class _SensorTypeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_SensorType.ValueType], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor
+    UNKNOWN: _SensorType.ValueType  # 0
+    VELOCITY: _SensorType.ValueType  # 1
+    GYROSCOPE: _SensorType.ValueType  # 2
+
+class SensorType(_SensorType, metaclass=_SensorTypeEnumTypeWrapper): ...
+
+UNKNOWN: SensorType.ValueType  # 0
+VELOCITY: SensorType.ValueType  # 1
+GYROSCOPE: SensorType.ValueType  # 2
+global___SensorType = SensorType
 
 @typing.final
 class SensorData(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
-    ID_FIELD_NUMBER: builtins.int
+    SENSOR_ID_FIELD_NUMBER: builtins.int
     TYPE_FIELD_NUMBER: builtins.int
     VALUE_FIELD_NUMBER: builtins.int
     TIMESTAMP_FIELD_NUMBER: builtins.int
-    id: builtins.int
-    type: builtins.str
+    sensor_id: builtins.str
+    type: global___SensorType.ValueType
     value: builtins.str
     timestamp: builtins.str
     def __init__(
         self,
         *,
-        id: builtins.int = ...,
-        type: builtins.str = ...,
+        sensor_id: builtins.str = ...,
+        type: global___SensorType.ValueType = ...,
         value: builtins.str = ...,
         timestamp: builtins.str = ...,
     ) -> None: ...
-    def ClearField(self, field_name: typing.Literal["id", b"id", "timestamp", b"timestamp", "type", b"type", "value", b"value"]) -> None: ...
+    def ClearField(self, field_name: typing.Literal["sensor_id", b"sensor_id", "timestamp", b"timestamp", "type", b"type", "value", b"value"]) -> None: ...
 
 global___SensorData = SensorData
 
