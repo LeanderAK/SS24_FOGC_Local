@@ -18,11 +18,12 @@ import proto.fog_pb2_grpc as fog_pb2_grpc  # noqa
 
 
 class Task:
-    def __init__(self, value, task_id=None, result=None, processed=False):
+    def __init__(self, value, sensor_type, task_id=None, result=None, processed=False):
         if task_id is None:
             task_id = uuid4()
         self.id = task_id
         self.value = value
+        self.sensor_type = sensor_type
         self.result = result
         self.processed = processed
 
@@ -30,6 +31,7 @@ class Task:
         return {
             "id": str(self.id),
             "value": self.value,
+            "sensor_type": self.sensor_type,
             "result": self.result,
             "processed": self.processed,
         }
@@ -38,6 +40,7 @@ class Task:
     def from_dict(cls, data):
         return cls(
             value=data["value"],
+            sensor_type=data["sensor_type"],
             task_id=data["id"],
             result=data["result"],
             processed=data["processed"],
@@ -119,8 +122,9 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         print(f"Received data: {request.data}")
         if not request.ListFields():
             print("Data empty!")
-
-        task = Task(value=request.data.value)
+        request_sensor_type = request.data.type
+        request_sensor_value = request.data.value
+        task = Task(value=request_sensor_value, sensor_type=request_sensor_type)
         self.task_queue.add_task(task=task)
 
         return fog_pb2.ProcessDataResponse()
@@ -140,9 +144,15 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
                 time.sleep(1)
 
     def process_task(self, task: Task):
-        task_value = task.value
+        task_value = float(task.value)
 
-        task.result = task_value
+        result_data = fog_pb2.Position(x=1, y=1, z=1)
+        if task.sensor_type == 1:
+            result_data = fog_pb2.Position(x=1 * task_value, y=1 * task_value / 2, z=1 * task_value)
+        else: 
+            result_data = fog_pb2.Position(x=1 + task_value, y=1 + task_value/2, z=1 + task_value)
+        
+        task.result = result_data
         task.processed = True
         return task
 
@@ -151,8 +161,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         channel = grpc.insecure_channel(f"{self.edge_ip}:{self.edge_port}")
         stub = fog_pb2_grpc.EdgeServiceStub(channel)
 
-        # TODO send actual data
-        result_data = fog_pb2.Position(x=4, y=5, z=6)
+        result_data = task.result
 
         request = fog_pb2.UpdatePositionRequest(position=result_data)
         try:
