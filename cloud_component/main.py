@@ -120,14 +120,17 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
 
     def ProcessDataStream(self, request_iterator, context):
         for request in request_iterator:
+            print(f"Received data from edge: {request.data}")
             if not request.ListFields():
                 print("Data empty!")
                 continue
             request_sensor_type = request.data.type
             request_sensor_value = request.data.value
-            task = Task(value=request_sensor_value, sensor_type=request_sensor_type, processed=False)
-            self.process_task(task)
-            yield self.send_feedback(task)
+            task = Task(value=request_sensor_value, sensor_type=request_sensor_type)
+            self.task_queue.add_task(task)
+            done_tasks = self.get_all_processed_tasks()
+            for task in done_tasks:
+                yield self.send_feedback(task)
             
 
 
@@ -137,30 +140,35 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
             if task_peek:
                 if not task_peek.processed:
                     self.process_task(task=task_peek)
-                    self.send_feedback(task_peek)
-                    self.task_queue.get_task()
             time.sleep(1)
 
     def process_task(self, task: Task):
         task_value = float(task.value)
+        result_data = fog_pb2.Position(x=1, y=1, z=1)
         if task.sensor_type == 1:
-            result_data = fog_pb2.Position(x=1 * task_value, y=1 * task_value / 2, z=1 * task_value)
+            result_data = {'x':float(1 * task_value), 'y':float(1 * task_value/2), 'z':float(1 * task_value)}
         else:
-            result_data = fog_pb2.Position(x=1 + task_value, y=1 + task_value / 2, z=1 + task_value)
-
+            result_data = {'x':float(1 + task_value), 'y':float(1 + task_value/2), 'z':float(1 + task_value)}
         task.result = result_data
         task.processed = True
+        
+    def get_all_processed_tasks(self):
+        processed_tasks = []
+        current_task = self.task_queue.peek_task()
+        while current_task:
+            if current_task.processed:
+                processed_tasks.append(current_task)
+                self.task_queue.get_task()
+                current_task = self.task_queue.peek_task()
+                
+        return processed_tasks
+        
 
     def send_feedback(self, task):
-        try:
-            return fog_pb2.UpdatePositionResponse(position=task.result)
-        except grpc.RpcError as e:
-            status_code = e.code()
-            print(
-                f"Request to Edge Service failed with error:"
-                f"{status_code.name} ({status_code.value})"
-            )
-
+        result_data = task.result
+        pos =  fog_pb2.Position(x=result_data.get('x'), y=result_data.get('y'), z=result_data.get('z'))
+        return fog_pb2.UpdatePositionResponse(position=pos)
+            
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     cloud_service = CloudService()
