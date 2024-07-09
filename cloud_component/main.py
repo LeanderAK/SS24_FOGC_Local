@@ -74,6 +74,7 @@ class TaskQueue:
                 for task in backup_data:
                     instance_task = Task.from_dict(task)
                     self.add_task(task=instance_task)
+                print(f"loading {len(backup_data)} tasks from replica")
         else:
             print("replica file not found!")
 
@@ -115,7 +116,6 @@ class TaskQueue:
 class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def __init__(self):
         self.task_queue = TaskQueue()
-        self.task_queue.init_persistence_file()
         self.edge_ip = os.getenv("EDGE_IP", "localhost")
         self.edge_port = int(os.getenv("EDGE_PORT", 50052))
 
