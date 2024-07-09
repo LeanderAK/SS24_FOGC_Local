@@ -156,7 +156,6 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         return task
 
     def send_feedback(self, task):
-        print("sending feedback")
         channel = grpc.insecure_channel(f"{self.edge_ip}:{self.edge_port}")
         stub = fog_pb2_grpc.EdgeServiceStub(channel)
 
@@ -166,6 +165,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         request = fog_pb2.UpdatePositionRequest(position=result_position)
         try:
             stub.UpdatePosition(request)
+            print("Sent new position to Edge Service")
             return True
         except grpc.RpcError as e:
             status_code = e.code()
