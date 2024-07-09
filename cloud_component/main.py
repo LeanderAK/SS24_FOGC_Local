@@ -145,7 +145,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
 
     def process_task(self, task: Task):
         task_value = float(task.value)
-        result_data = fog_pb2.Position(x=1, y=1, z=1)
+        result_data = {}
         if task.sensor_type == 1:
             result_data = {'x':float(1 * task_value), 'y':float(1 * task_value/2), 'z':float(1 * task_value)}
         else:
