@@ -145,11 +145,11 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def process_task(self, task: Task):
         task_value = float(task.value)
 
-        result_data = fog_pb2.Position(x=1, y=1, z=1)
+        result_data = {}
         if task.sensor_type == 1:
-            result_data = fog_pb2.Position(x=1 * task_value, y=1 * task_value / 2, z=1 * task_value)
+            result_data = {'x':float(1 * task_value), 'y':float(1 * task_value/2), 'z':float(1 * task_value)}
         else: 
-            result_data = fog_pb2.Position(x=1 + task_value, y=1 + task_value/2, z=1 + task_value)
+            result_data = {'x':float(1 + task_value), 'y':float(1 + task_value/2), 'z':float(1 + task_value)}
         
         task.result = result_data
         task.processed = True
@@ -161,8 +161,9 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         stub = fog_pb2_grpc.EdgeServiceStub(channel)
 
         result_data = task.result
+        result_position = fog_pb2.Position(x=result_data.get('x'), y=result_data.get('y'), z=result_data.get('z'))
 
-        request = fog_pb2.UpdatePositionRequest(position=result_data)
+        request = fog_pb2.UpdatePositionRequest(position=result_position)
         try:
             stub.UpdatePosition(request)
             return True
