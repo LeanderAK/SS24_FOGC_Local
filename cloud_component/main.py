@@ -57,7 +57,7 @@ class TaskQueue:
         self.persistence_file_path = os.path.join(
             os.path.dirname(__file__), "queue_replica.json"
         )
-
+        self.init_persistence_file()
         self.load_tasks_from_replica_queue()
 
     def init_persistence_file(self):
@@ -70,6 +70,7 @@ class TaskQueue:
         if os.path.exists(self.persistence_file_path):
             with open(self.persistence_file_path, "r") as f:
                 backup_data = load(f)
+                print(f"loading {len(backup_data)} tasks from replica")
                 for task in backup_data:
                     instance_task = Task.from_dict(task)
                     self.add_task(task=instance_task)
