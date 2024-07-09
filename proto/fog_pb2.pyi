@@ -112,35 +112,6 @@ class Position(google.protobuf.message.Message):
 global___Position = Position
 
 @typing.final
-class UpdatePositionRequest(google.protobuf.message.Message):
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    POSITION_FIELD_NUMBER: builtins.int
-    @property
-    def position(self) -> global___Position: ...
-    def __init__(
-        self,
-        *,
-        position: global___Position | None = ...,
-    ) -> None: ...
-    def HasField(self, field_name: typing.Literal["position", b"position"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing.Literal["position", b"position"]) -> None: ...
-
-global___UpdatePositionRequest = UpdatePositionRequest
-
-@typing.final
-class UpdatePositionResponse(google.protobuf.message.Message):
-    """Empty response - no error means position was updated"""
-
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor
-
-    def __init__(
-        self,
-    ) -> None: ...
-
-global___UpdatePositionResponse = UpdatePositionResponse
-
-@typing.final
 class ProcessDataRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
@@ -158,15 +129,18 @@ class ProcessDataRequest(google.protobuf.message.Message):
 global___ProcessDataRequest = ProcessDataRequest
 
 @typing.final
-class ProcessDataResponse(google.protobuf.message.Message):
-    """Empty response - data will be processed asynchronously
-    and returned to the UpdatePosition endpoint
-    """
-
+class UpdatePositionResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor
 
+    POSITION_FIELD_NUMBER: builtins.int
+    @property
+    def position(self) -> global___Position: ...
     def __init__(
         self,
+        *,
+        position: global___Position | None = ...,
     ) -> None: ...
+    def HasField(self, field_name: typing.Literal["position", b"position"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing.Literal["position", b"position"]) -> None: ...
 
-global___ProcessDataResponse = ProcessDataResponse
+global___UpdatePositionResponse = UpdatePositionResponse

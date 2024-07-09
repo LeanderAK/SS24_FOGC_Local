@@ -45,7 +45,6 @@ resource "google_compute_instance" "default" {
     git clone https://github.com/LeanderAK/SS24_FOGC_Project.git /opt/SS24_FOGC_Project
     cd /opt/SS24_FOGC_Project
     pip3 install -r requirements.txt
-    EDGE_IP=<add_your_ip> make cloud &
   EOT
 }
 
