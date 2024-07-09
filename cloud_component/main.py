@@ -73,6 +73,7 @@ class TaskQueue:
                 for task in backup_data:
                     instance_task = Task.from_dict(task)
                     self.add_task(task=instance_task)
+                print(f"loading {len(backup_data)} tasks from replica")
         else:
             print("replica file not found!")
 
