@@ -57,7 +57,7 @@ class TaskQueue:
         self.persistence_file_path = os.path.join(
             os.path.dirname(__file__), "queue_replica.json"
         )
-
+        self.init_persistence_file()
         self.load_tasks_from_replica_queue()
 
     def init_persistence_file(self):
@@ -114,7 +114,6 @@ class TaskQueue:
 class CloudService(fog_pb2_grpc.CloudServiceServicer):
     def __init__(self):
         self.task_queue = TaskQueue()
-        self.task_queue.init_persistence_file()
         self.edge_ip = os.getenv("EDGE_IP", "localhost")
         self.edge_port = os.getenv("EDGE_PORT", 50052)
 
