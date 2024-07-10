@@ -60,7 +60,7 @@ func (s *EdgeServer) handleSensorStream(sensor **Sensor, sensorMutex *sync.Mutex
 		sensorID := (*sensor).id
 
 		ctx, cancel := context.WithCancel(context.Background())
-		stream, err = client.StreamData(ctx, &pb.StreamDataRequest{})
+		stream, err = client.StreamData(ctx, &pb.StreamDataRequest{}, grpc.WaitForReady(true))
 		if err != nil {
 			log.Printf("Failed to start stream with sensor %s: %v. Retrying in 1 second...", sensorID, err)
 			cancel()
@@ -156,7 +156,7 @@ func (s *EdgeServer) establishCloudConnection(addr string) {
 		}
 		client := pb.NewCloudServiceClient(conn)
 		ctx, cancel := context.WithCancel(context.Background())
-		stream, err := client.ProcessDataStream(ctx)
+		stream, err := client.ProcessDataStream(ctx, grpc.WaitForReady(true))
 		if err != nil {
 			log.Printf("Failed to start stream with cloud: %v. Retrying in 1 second...", err)
 			cancel()

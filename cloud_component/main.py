@@ -96,6 +96,11 @@ class TaskQueue:
             self.tasks.appendleft(task)
             self.write_tasks_to_replica_queue()
 
+    def update_task(self, task: Task, field, value):
+        if hasattr(task, field):
+            setattr(task, field, value)
+        self.write_tasks_to_replica_queue()
+            
     def get_task(self) -> Task:
         with self.lock:
             if self.tasks:
@@ -111,6 +116,22 @@ class TaskQueue:
                 return self.tasks[0]
             else:
                 return None
+        
+    def get_all_processed_tasks(self):
+        with self.lock:
+            processed_tasks = []
+            unprocessed_tasks = deque()
+
+            while self.tasks:
+                task = self.tasks.popleft()
+                if task.processed == True:
+                    processed_tasks.append(task)
+                else:
+                    unprocessed_tasks.append(task)
+
+            self.tasks = unprocessed_tasks
+            self.write_tasks_to_replica_queue()
+            return processed_tasks
 
 
 class CloudService(fog_pb2_grpc.CloudServiceServicer):
@@ -120,27 +141,37 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         self.edge_port = int(os.getenv("EDGE_PORT", 50052))
 
     def ProcessDataStream(self, request_iterator, context):
+        print("Processing data stream from edge")
+        # work on requests
         for request in request_iterator:
-            print(f"Received data from edge: {request.data}")
             if not request.ListFields():
                 print("Data empty!")
                 continue
             request_sensor_type = request.data.type
             request_sensor_value = request.data.value
+            # create task, add task to queue
             task = Task(value=request_sensor_value, sensor_type=request_sensor_type)
             self.task_queue.add_task(task)
-            done_tasks = self.get_all_processed_tasks()
-            for task in done_tasks:
-                yield self.send_feedback(task)
-            
+            print(f"Received data from edge and added task to queue ", task.id)
 
+            # send finished tasks to edge
+            done_tasks = self.task_queue.get_all_processed_tasks()
+            for task in done_tasks:
+                print(f"Sending feedback for task: {task}")
+                yield self.send_feedback(task)
+
+    def get_first_unprocessed_task(self):
+        for task in self.task_queue.tasks:
+            if not task.processed:
+                return task
+        return None
 
     def process_task_queue(self):
         while True:
-            task_peek = self.task_queue.peek_task()
-            if task_peek:
-                if not task_peek.processed:
-                    self.process_task(task=task_peek)
+            task = self.get_first_unprocessed_task()
+            if task is not None:
+                self.process_task(task=task)
+                
             time.sleep(1)
 
     def process_task(self, task: Task):
@@ -150,21 +181,9 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
             result_data = {'x':float(1 * task_value), 'y':float(1 * task_value/2), 'z':float(1 * task_value)}
         else:
             result_data = {'x':float(1 + task_value), 'y':float(1 + task_value/2), 'z':float(1 + task_value)}
-        task.result = result_data
-        task.processed = True
+        self.task_queue.update_task(task, "result", result_data)
+        self.task_queue.update_task(task, "processed", True)
         
-    def get_all_processed_tasks(self):
-        processed_tasks = []
-        current_task = self.task_queue.peek_task()
-        while current_task:
-            if current_task.processed:
-                processed_tasks.append(current_task)
-                self.task_queue.get_task()
-                current_task = self.task_queue.peek_task()
-                
-        return processed_tasks
-        
-
     def send_feedback(self, task):
         result_data = task.result
         pos =  fog_pb2.Position(x=result_data.get('x'), y=result_data.get('y'), z=result_data.get('z'))
