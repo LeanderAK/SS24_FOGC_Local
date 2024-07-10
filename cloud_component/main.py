@@ -150,6 +150,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
             time.sleep(1)
 
     def process_task(self, task: Task):
+        print(f"Processing task: {task}")
         task_value = float(task.value)
         result_data = {}
         if task.sensor_type == 1:
