@@ -1,4 +1,9 @@
 # Fog Computing Assignment
+## Demonstration Video
+https://www.youtube.com/watch?v=dKCi2xfCVrA
+
+## Documentation
+[Documentation](documentation.pdf)
 
 ## Pre-requisites
 - make
