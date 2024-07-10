@@ -120,8 +120,10 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         self.edge_port = int(os.getenv("EDGE_PORT", 50052))
 
     def ProcessDataStream(self, request_iterator, context):
+        print("Processing data stream from edge")
         done_tasks = self.get_all_processed_tasks()
         for task in done_tasks:
+            print(f"Sending feedback for task: {task}")
             yield self.send_feedback(task)
 
         for request in request_iterator:
@@ -157,6 +159,7 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         processed_tasks = []
         current_task = self.task_queue.peek_task()
         while current_task:
+            print(f"length of task queue: {len(self.task_queue.tasks)}")
             if current_task.processed:
                 processed_tasks.append(current_task)
                 self.task_queue.get_task()
