@@ -120,6 +120,10 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         self.edge_port = int(os.getenv("EDGE_PORT", 50052))
 
     def ProcessDataStream(self, request_iterator, context):
+        done_tasks = self.get_all_processed_tasks()
+        for task in done_tasks:
+            yield self.send_feedback(task)
+
         for request in request_iterator:
             print(f"Received data from edge: {request.data}")
             if not request.ListFields():
@@ -129,10 +133,6 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
             request_sensor_value = request.data.value
             task = Task(value=request_sensor_value, sensor_type=request_sensor_type)
             self.task_queue.add_task(task)
-            done_tasks = self.get_all_processed_tasks()
-            for task in done_tasks:
-                yield self.send_feedback(task)
-            
 
 
     def process_task_queue(self):
