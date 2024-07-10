@@ -135,6 +135,11 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
             request_sensor_value = request.data.value
             task = Task(value=request_sensor_value, sensor_type=request_sensor_type)
             self.task_queue.add_task(task)
+            
+            done_tasks = self.get_all_processed_tasks()
+            for task in done_tasks:
+                print(f"Sending feedback for task: {task}")
+                yield self.send_feedback(task)
 
 
     def process_task_queue(self):
