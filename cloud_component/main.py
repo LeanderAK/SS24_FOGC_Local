@@ -87,30 +87,30 @@ class TaskQueue:
             print("replica file not found!")
 
     def add_task(self, task: Task):
-        # with self.lock:
-        self.tasks.append(task)
-        self.write_tasks_to_replica_queue()
+        with self.lock:
+            self.tasks.append(task)
+            self.write_tasks_to_replica_queue()
 
     def add_task_to_front(self, task: Task):
-        # with self.lock:
-        self.tasks.appendleft(task)
-        self.write_tasks_to_replica_queue()
+        with self.lock:
+            self.tasks.appendleft(task)
+            self.write_tasks_to_replica_queue()
 
     def get_task(self) -> Task:
-        # with self.lock:
-        if self.tasks:
-            task = self.tasks.popleft()
-            self.write_tasks_to_replica_queue()
-            return task
-        else:
-            return None
+        with self.lock:
+            if self.tasks:
+                task = self.tasks.popleft()
+                self.write_tasks_to_replica_queue()
+                return task
+            else:
+                return None
 
     def peek_task(self) -> Task:
-        # with self.lock:
-        if self.tasks:
-            return self.tasks[0]
-        else:
-            return None
+        with self.lock:
+            if self.tasks:
+                return self.tasks[0]
+            else:
+                return None
 
 
 class CloudService(fog_pb2_grpc.CloudServiceServicer):
