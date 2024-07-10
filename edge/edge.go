@@ -24,17 +24,16 @@ type Sensor struct {
 }
 
 type Cloud struct {
-	cloudClient            pb.CloudServiceClient
-	cloudConn              *grpc.ClientConn
-	cloudProcessDataCtx    context.Context
-	cloudProcessDataCancel context.CancelFunc
+	client       *pb.CloudServiceClient
+	stream       pb.CloudService_ProcessDataStreamClient
+	streamCtx    *context.Context
+	streamCancel *context.CancelFunc
 }
 
 type EdgeServer struct {
 	pb.UnimplementedEdgeServiceServer
 
-	queue     chan *pb.StreamDataResponse
-	queueCond *sync.Cond
+	queue chan *pb.StreamDataResponse
 
 	sensor1      *Sensor
 	sensor1Mutex sync.Mutex
@@ -43,11 +42,6 @@ type EdgeServer struct {
 
 	cloud      *Cloud
 	cloudMutex sync.Mutex
-}
-
-func (s *EdgeServer) UpdatePosition(ctx context.Context, req *pb.UpdatePositionRequest) (*pb.UpdatePositionResponse, error) {
-	log.Printf("Received position update: %+v", req.Position)
-	return &pb.UpdatePositionResponse{}, nil
 }
 
 func (s *EdgeServer) handleSensorStream(sensor **Sensor, sensorMutex *sync.Mutex) {
@@ -78,7 +72,7 @@ func (s *EdgeServer) handleSensorStream(sensor **Sensor, sensorMutex *sync.Mutex
 		for {
 			resp, err := stream.Recv()
 			if err != nil {
-				log.Printf("Stream receive error: %v", err)
+				log.Printf("Sensor stream receive error: %v", err)
 				cancel()
 				sensorMutex.Unlock()
 				break
@@ -88,16 +82,43 @@ func (s *EdgeServer) handleSensorStream(sensor **Sensor, sensorMutex *sync.Mutex
 	}
 }
 
-func (s *EdgeServer) processStream(ctx context.Context, req *pb.StreamDataResponse) error {
+func (s *EdgeServer) handleCloudStream() {
+	for {
+		if s.cloud == nil {
+			log.Println("Cloud not connected.")
+			time.Sleep(1 * time.Second)
+			continue
+		}
+
+		for {
+			resp, err := s.cloud.stream.Recv()
+			if err != nil {
+				log.Printf("Cloud stream receive error: %v", err)
+				s.cloudMutex.Lock()
+				(*s.cloud.streamCancel)()
+				s.cloud = nil
+				s.cloudMutex.Unlock()
+				time.Sleep(1 * time.Second)
+				break
+			}
+			log.Printf("Received position update: %s", resp.Position)
+		}
+	}
+}
+
+func (s *EdgeServer) processSensorStream(ctx context.Context, req *pb.StreamDataResponse) error {
 	s.cloudMutex.Lock()
 	defer s.cloudMutex.Unlock()
-
-	if s.cloud.cloudConn == nil {
+	if s.cloud == nil {
 		return fmt.Errorf("cloud connection is down")
 	}
-
-	_, err := s.cloud.cloudClient.ProcessData(ctx, &pb.ProcessDataRequest{Data: req.Data})
+	if s.cloud.stream == nil {
+		return fmt.Errorf("cloud stream is down")
+	}
+	err := s.cloud.stream.Send(&pb.ProcessDataRequest{Data: req.Data})
 	if err != nil {
+		s.cloud.stream.CloseSend()
+		s.cloud = nil
 		return err
 	}
 
@@ -107,14 +128,9 @@ func (s *EdgeServer) processStream(ctx context.Context, req *pb.StreamDataRespon
 func (s *EdgeServer) processQueue() {
 	for msg := range s.queue {
 		log.Printf("Queue length: %d", len(s.queue))
-		s.queueCond.L.Lock()
-		for s.cloud.cloudConn == nil {
-			s.queueCond.Wait()
-		}
-		s.queueCond.L.Unlock()
 
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-		err := s.processStream(ctx, msg)
+		err := s.processSensorStream(ctx, msg)
 		cancel()
 		if err != nil {
 			log.Printf("Failed to process queued data: %v. Requeuing data and waiting 1 second.", err)
@@ -126,30 +142,35 @@ func (s *EdgeServer) processQueue() {
 }
 
 func (s *EdgeServer) establishCloudConnection(addr string) {
-	s.cloudMutex = sync.Mutex{}
 	for {
+		if s.cloud != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		log.Printf("Attempting cloud connection to %s", addr)
+		conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+		if err != nil {
+			log.Printf("Failed to connect to cloud: %v. Retrying in 1 second", err)
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		client := pb.NewCloudServiceClient(conn)
+		ctx, cancel := context.WithCancel(context.Background())
+		stream, err := client.ProcessDataStream(ctx)
+		if err != nil {
+			log.Printf("Failed to start stream with cloud: %v. Retrying in 1 second...", err)
+			cancel()
+			time.Sleep(1 * time.Second)
+			continue
+		}
 		s.cloudMutex.Lock()
-		if s.cloud == nil {
-			log.Printf("Connecting to cloud (%s)...", addr)
-			conn, err := grpc.NewClient(addr, grpc.WithTransportCredentials(insecure.NewCredentials()))
-			if err != nil {
-				log.Printf("Failed to connect to cloud: %v. Retrying in 1 second...", err)
-				s.cloudMutex.Unlock()
-				time.Sleep(1 * time.Second)
-				continue
-			}
-			client := pb.NewCloudServiceClient(conn)
-			s.cloud = &Cloud{
-				cloudClient:            client,
-				cloudConn:              conn,
-				cloudProcessDataCtx:    context.Background(),
-				cloudProcessDataCancel: nil,
-			}
-			s.queueCond.Broadcast()
+		s.cloud = &Cloud{
+			client:       &client,
+			stream:       stream,
+			streamCtx:    &ctx,
+			streamCancel: &cancel,
 		}
 		s.cloudMutex.Unlock()
-
-		time.Sleep(1 * time.Second)
 	}
 }
 
@@ -233,8 +254,7 @@ func main() {
 	edgeIP, edgePort, sensor1IP, sensor1Port, sensor2IP, sensor2Port, cloudIP, cloudPort := getEnv()
 
 	edgeServer := &EdgeServer{
-		queue:     make(chan *pb.StreamDataResponse, 100),
-		queueCond: sync.NewCond(&sync.Mutex{}),
+		queue: make(chan *pb.StreamDataResponse, 1000),
 	}
 
 	grpcServer := grpc.NewServer()
@@ -262,6 +282,7 @@ func main() {
 	// Establish cloud connection
 	cloudAddr := net.JoinHostPort(cloudIP, cloudPort)
 	go edgeServer.establishCloudConnection(cloudAddr)
+	go edgeServer.handleCloudStream()
 
 	log.Printf("Starting gRPC server on %s", addr)
 	if err := grpcServer.Serve(listener); err != nil {

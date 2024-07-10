@@ -3,7 +3,6 @@ syntax = "proto3";
 package fogpb;
 option go_package = "./;fogpb";
 
-
 enum SensorType {
     UNKNOWN = 0;
     VELOCITY = 1;
@@ -39,42 +38,24 @@ message Position {
     double z = 3;
 }
 
-message UpdatePositionRequest {
-    Position position = 1;
-}
-
-message UpdatePositionResponse {
-    // Empty response - no error means position was updated
-}
-
-// EdgeService runs on the edge device and
-// receives sensor data from the SensorService.
-// It also sends aggregated sensor data to the CloudService.
-service EdgeService {
-    // UpdatePosition will be called by the SensorService
-    // to update the position of the edge device.
-    // This endpoint returns nothing,
-    // no error means position was updated successfully.
-    rpc UpdatePosition(UpdatePositionRequest) returns (UpdatePositionResponse);
-}
-
 message ProcessDataRequest {
     SensorData data = 1;
 }
 
-message ProcessDataResponse {
-    // Empty response - data will be processed asynchronously
-    // and returned to the UpdatePosition endpoint
+message UpdatePositionResponse {
+    Position position = 1;
+}
+
+// EdgeService runs on the edge device and
+// receives sensor data from the SensorService.
+service EdgeService {
+    // Removed the ProcessDataStream RPC from EdgeService
 }
 
 // CloudService runs on the cloud and processes
 // aggregated sensor data.
 service CloudService {
-    // ProcessData will be called by the EdgeService
-    // to process aggregated sensor data.
-    // This endpoint returns nothing,
-    // no error means data was received successfully.
-    // Results will be returned to the UpdatePosition endpoint
-    // in the EdgeService.
-    rpc ProcessData(ProcessDataRequest) returns (ProcessDataResponse);
+    // Bidirectional streaming endpoint for processing data
+    // and sending back position updates to the EdgeService.
+    rpc ProcessDataStream(stream ProcessDataRequest) returns (stream UpdatePositionResponse);
 }

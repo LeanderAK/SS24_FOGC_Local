@@ -113,7 +113,7 @@ class SensorService(object):
 class EdgeServiceStub(object):
     """EdgeService runs on the edge device and
     receives sensor data from the SensorService.
-    It also sends aggregated sensor data to the CloudService.
+    Removed the ProcessDataStream RPC from EdgeService
     """
 
     def __init__(self, channel):
@@ -122,37 +122,17 @@ class EdgeServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.UpdatePosition = channel.unary_unary(
-                '/fogpb.EdgeService/UpdatePosition',
-                request_serializer=fog__pb2.UpdatePositionRequest.SerializeToString,
-                response_deserializer=fog__pb2.UpdatePositionResponse.FromString,
-                _registered_method=True)
 
 
 class EdgeServiceServicer(object):
     """EdgeService runs on the edge device and
     receives sensor data from the SensorService.
-    It also sends aggregated sensor data to the CloudService.
+    Removed the ProcessDataStream RPC from EdgeService
     """
-
-    def UpdatePosition(self, request, context):
-        """UpdatePosition will be called by the SensorService
-        to update the position of the edge device.
-        This endpoint returns nothing,
-        no error means position was updated successfully.
-        """
-        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
-        context.set_details('Method not implemented!')
-        raise NotImplementedError('Method not implemented!')
 
 
 def add_EdgeServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'UpdatePosition': grpc.unary_unary_rpc_method_handler(
-                    servicer.UpdatePosition,
-                    request_deserializer=fog__pb2.UpdatePositionRequest.FromString,
-                    response_serializer=fog__pb2.UpdatePositionResponse.SerializeToString,
-            ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
             'fogpb.EdgeService', rpc_method_handlers)
@@ -164,35 +144,8 @@ def add_EdgeServiceServicer_to_server(servicer, server):
 class EdgeService(object):
     """EdgeService runs on the edge device and
     receives sensor data from the SensorService.
-    It also sends aggregated sensor data to the CloudService.
+    Removed the ProcessDataStream RPC from EdgeService
     """
-
-    @staticmethod
-    def UpdatePosition(request,
-            target,
-            options=(),
-            channel_credentials=None,
-            call_credentials=None,
-            insecure=False,
-            compression=None,
-            wait_for_ready=None,
-            timeout=None,
-            metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
-            target,
-            '/fogpb.EdgeService/UpdatePosition',
-            fog__pb2.UpdatePositionRequest.SerializeToString,
-            fog__pb2.UpdatePositionResponse.FromString,
-            options,
-            channel_credentials,
-            insecure,
-            call_credentials,
-            compression,
-            wait_for_ready,
-            timeout,
-            metadata,
-            _registered_method=True)
 
 
 class CloudServiceStub(object):
@@ -206,10 +159,10 @@ class CloudServiceStub(object):
         Args:
             channel: A grpc.Channel.
         """
-        self.ProcessData = channel.unary_unary(
-                '/fogpb.CloudService/ProcessData',
+        self.ProcessDataStream = channel.stream_stream(
+                '/fogpb.CloudService/ProcessDataStream',
                 request_serializer=fog__pb2.ProcessDataRequest.SerializeToString,
-                response_deserializer=fog__pb2.ProcessDataResponse.FromString,
+                response_deserializer=fog__pb2.UpdatePositionResponse.FromString,
                 _registered_method=True)
 
 
@@ -218,13 +171,9 @@ class CloudServiceServicer(object):
     aggregated sensor data.
     """
 
-    def ProcessData(self, request, context):
-        """ProcessData will be called by the EdgeService
-        to process aggregated sensor data.
-        This endpoint returns nothing,
-        no error means data was received successfully.
-        Results will be returned to the UpdatePosition endpoint
-        in the EdgeService.
+    def ProcessDataStream(self, request_iterator, context):
+        """Bidirectional streaming endpoint for processing data
+        and sending back position updates to the EdgeService.
         """
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -233,10 +182,10 @@ class CloudServiceServicer(object):
 
 def add_CloudServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
-            'ProcessData': grpc.unary_unary_rpc_method_handler(
-                    servicer.ProcessData,
+            'ProcessDataStream': grpc.stream_stream_rpc_method_handler(
+                    servicer.ProcessDataStream,
                     request_deserializer=fog__pb2.ProcessDataRequest.FromString,
-                    response_serializer=fog__pb2.ProcessDataResponse.SerializeToString,
+                    response_serializer=fog__pb2.UpdatePositionResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -252,7 +201,7 @@ class CloudService(object):
     """
 
     @staticmethod
-    def ProcessData(request,
+    def ProcessDataStream(request_iterator,
             target,
             options=(),
             channel_credentials=None,
@@ -262,12 +211,12 @@ class CloudService(object):
             wait_for_ready=None,
             timeout=None,
             metadata=None):
-        return grpc.experimental.unary_unary(
-            request,
+        return grpc.experimental.stream_stream(
+            request_iterator,
             target,
-            '/fogpb.CloudService/ProcessData',
+            '/fogpb.CloudService/ProcessDataStream',
             fog__pb2.ProcessDataRequest.SerializeToString,
-            fog__pb2.ProcessDataResponse.FromString,
+            fog__pb2.UpdatePositionResponse.FromString,
             options,
             channel_credentials,
             insecure,
