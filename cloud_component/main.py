@@ -159,10 +159,9 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
         processed_tasks = []
         current_task = self.task_queue.peek_task()
         while current_task.processed:
-            processed_tasks.append(current_task)
-            self.task_queue.get_task()
+            print(f"length of task queue: {len(self.task_queue.tasks)}")
+            processed_tasks.append(self.task_queue.get_task())
             current_task = self.task_queue.peek_task()
-                
         return processed_tasks
         
 
