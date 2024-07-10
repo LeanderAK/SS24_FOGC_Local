@@ -141,12 +141,16 @@ class CloudService(fog_pb2_grpc.CloudServiceServicer):
                 print(f"Sending feedback for task: {task}")
                 yield self.send_feedback(task)
 
+    def get_first_unprocessed_task(self):
+        for task in self.task_queue.tasks:
+            if not task.processed:
+                return task
 
     def process_task_queue(self):
         while True:
-            task_peek = self.task_queue.peek_task()
-            if task_peek and not task_peek.processed:
-                self.process_task(task=task_peek)
+            task = self.get_first_unprocessed_task()
+            if task is not None and not task.processed:
+                self.process_task(task=task)
             time.sleep(1)
 
     def process_task(self, task: Task):
